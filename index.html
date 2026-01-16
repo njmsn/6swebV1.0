@@ -1,0 +1,115 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Energy Monitoring Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      body {
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      /* 优化滚动条：更细、更圆润 */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #cbd5e1;
+      }
+      .grid-background {
+        background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+        background-size: 40px 40px;
+      }
+
+      /* 自定义工具提示气泡样式 */
+      .tooltip-bubble {
+        background-color: #080b1a;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+        position: relative;
+        filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.4));
+        pointer-events: none;
+      }
+
+      /* 底部箭头 */
+      .tooltip-arrow-bottom::before {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        transform: translateX(-50%) rotate(45deg);
+        width: 8px;
+        height: 8px;
+        background-color: #080b1a;
+      }
+
+      /* 左侧箭头 - 用于地图左侧按钮 */
+      .tooltip-arrow-left::before {
+        content: '';
+        position: absolute;
+        left: -4px;
+        top: 50%;
+        transform: translateY(-50%) rotate(45deg);
+        width: 8px;
+        height: 8px;
+        background-color: #080b1a;
+      }
+
+      /* Leaflet 自定义样式覆盖 */
+      .leaflet-container {
+        background: #f1f3f6 !important;
+        font-family: inherit;
+      }
+      .custom-div-icon {
+        background: none !important;
+        border: none !important;
+      }
+      .leaflet-tooltip-custom {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+      }
+      
+      /* 状态动画 */
+      @keyframes sonar-wave {
+        0% { transform: scale(0.5); opacity: 1; }
+        100% { transform: scale(2.5); opacity: 0; }
+      }
+      .ping-animation {
+        animation: sonar-wave 2s infinite ease-out;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

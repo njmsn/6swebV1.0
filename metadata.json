@@ -1,0 +1,7 @@
+{
+  "name": "Smart Energy Monitoring Platform",
+  "description": "A sophisticated inspection and monitoring dashboard for energy facilities, featuring real-time GIS mapping, personnel tracking, and task management.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
