@@ -39,7 +39,7 @@ const PersonnelPopup: React.FC<{
   const [activeTab, setActiveTab] = useState('实时');
   
   const InfoRow = ({ label, value }: { label: string, value: string }) => (
-    <div className="flex items-center py-2 border-b border-slate-50 last:border-0">
+    <div className="flex items-center py-1 border-b border-slate-50 last:border-0">
       <span className="text-[#94a3b8] font-bold shrink-0 w-[60px] text-[11px]">{label}</span>
       <span className="text-[#334155] font-black truncate flex-1 pl-2 text-[12px]">{value || '--'}</span>
     </div>
@@ -63,7 +63,7 @@ const PersonnelPopup: React.FC<{
 
   return (
     <div className="absolute bg-white rounded-2xl shadow-[0_35px_80px_-15px_rgba(0,0,0,0.25)] border border-slate-100 z-[1000] overflow-visible flex flex-col animate-in zoom-in-95 fade-in duration-500 ease-out"
-      style={{ width: '330px', height: '480px', left: `${position.x}px`, top: `${position.y - 28}px`, transform: 'translate(-50%, -100%)' }}>
+      style={{ width: '330px', height: '430px', left: `${position.x}px`, top: `${position.y - 28}px`, transform: 'translate(-50%, -100%)' }}>
       
       <div className="absolute bottom-[-11px] left-1/2 -translate-x-1/2 w-0 h-0" style={{ borderLeft: '12px solid transparent', borderRight: '12px solid transparent', borderTop: '12px solid white', filter: 'drop-shadow(0 5px 3px rgba(0,0,0,0.08))' }}></div>
       
@@ -97,7 +97,7 @@ const PersonnelPopup: React.FC<{
 
       <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-4">
         {activeTab === '实时' && (
-          <div className="animate-in fade-in duration-300 space-y-2">
+          <div className="animate-in fade-in duration-300 space-y-1">
             <InfoRow label="职位" value="管网安检员" />
             <InfoRow label="版本号" value="v6.168.229" />
             <InfoRow label="IMEI" value="864502041234567" />
@@ -105,6 +105,12 @@ const PersonnelPopup: React.FC<{
             <InfoRow label="位置" value="天津市滨海新区泰达大街" />
             <InfoRow label="状态" value="巡检中 (正常)" />
             <InfoRow label="上班" value="2025-05-22 08:30:12" />
+            <InfoRow label="下班" value="2025-05-22 17:30:00" />
+            <InfoRow label="同步" value="2025-05-22 11:20:45" />
+            <div className="flex items-center py-1 border-b border-slate-50 last:border-0">
+              <span className="text-[#94a3b8] font-bold shrink-0 w-[60px] text-[11px]">角色</span>
+              <span className="text-[#9a6bff] font-black truncate flex-1 pl-2 text-[12px]">巡检组长</span>
+            </div>
           </div>
         )}
 
@@ -356,13 +362,25 @@ export const MapArea: React.FC = () => {
       </div>
 
       <div className="absolute bottom-6 left-6 z-40 flex flex-col space-y-2">
-        <MapControlButton label="刷新地图" onClick={handleRefresh} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeWidth="2" /></svg>} />
-        <MapControlButton label="总览视角" onClick={() => mapRef.current?.setView([39.0145, 117.7126], 14, { animate: true })} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" strokeWidth="2"/></svg>} />
-        <MapControlButton label="空间测量" isActive={activeTool === 'measure'} onClick={() => setActiveTool(activeTool === 'measure' ? null : 'measure')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path d="M12 4v12m0 0l-3-3m3 3l3-3M6 19h12" /></svg>} />
-        <MapControlButton label="数据统计" isActive={activeTool === 'stats'} onClick={() => setActiveTool(activeTool === 'stats' ? null : 'stats')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeWidth="2"/></svg>} />
+        <MapControlButton label="刷新" onClick={handleRefresh} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeWidth="2" /></svg>} />
+        <MapControlButton label="总览" onClick={() => mapRef.current?.setView([39.0145, 117.7126], 14, { animate: true })} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" strokeWidth="2"/></svg>} />
+        <MapControlButton label="测量" isActive={activeTool === 'measure'} onClick={() => setActiveTool(activeTool === 'measure' ? null : 'measure')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path d="M12 4v12m0 0l-3-3m3 3l3-3M6 19h12" /></svg>}>
+          <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 flex flex-row items-center bg-white rounded-lg shadow-xl border border-slate-100 p-1.5 animate-in fade-in slide-in-from-left-3 duration-300 whitespace-nowrap">
+            {['测距', '面积', '角度'].map((tool) => (
+              <button key={tool} onClick={(e) => { e.stopPropagation(); }} className="px-4 py-2 rounded-md text-xs font-bold text-slate-500 hover:bg-[#9a6bff]/10 hover:text-[#9a6bff] transition-all">{tool}</button>
+            ))}
+          </div>
+        </MapControlButton>
+        <MapControlButton label="统计" isActive={activeTool === 'stats'} onClick={() => setActiveTool(activeTool === 'stats' ? null : 'stats')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeWidth="2"/></svg>}>
+          <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 flex flex-row items-center bg-white rounded-lg shadow-xl border border-slate-100 p-1.5 animate-in fade-in slide-in-from-left-3 duration-300 whitespace-nowrap">
+            {['绘图', '计算', '清除'].map((tool) => (
+              <button key={tool} onClick={(e) => { e.stopPropagation(); }} className="px-4 py-2 rounded-md text-xs font-bold text-slate-500 hover:bg-[#9a6bff]/10 hover:text-[#9a6bff] transition-all">{tool}</button>
+            ))}
+          </div>
+        </MapControlButton>
         <MapControlButton label="要素识别" isActive={activeTool === 'identify'} onClick={() => setActiveTool(activeTool === 'identify' ? null : 'identify')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2"/></svg>} />
-        <MapControlButton label={isFullscreen ? "退出全屏" : "全屏显示"} isActive={isFullscreen} onClick={handleFullscreen} icon={isFullscreen ? (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 14h6v6M20 10h-6V4M14 20v-6h6M10 4v6H4" /></svg>) : (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 3h6v6M9 21H3v-6M21 15v6h-6M3 9V3h6" /></svg>)} />
-        <MapControlButton label="底图切换" isActive={activeTool === 'mapType'} onClick={() => setActiveTool(activeTool === 'mapType' ? null : 'mapType')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" strokeWidth="2"/></svg>} >
+        <MapControlButton label="全屏" isActive={isFullscreen} onClick={handleFullscreen} icon={isFullscreen ? (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 14h6v6M20 10h-6V4M14 20v-6h6M10 4v6H4" /></svg>) : (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 3h6v6M9 21H3v-6M21 15v6h-6M3 9V3h6" /></svg>)} />
+        <MapControlButton label="地图" isActive={activeTool === 'mapType'} onClick={() => setActiveTool(activeTool === 'mapType' ? null : 'mapType')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" strokeWidth="2"/></svg>} >
           <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 flex flex-row items-center bg-white rounded-lg shadow-xl border border-slate-100 p-1.5 animate-in fade-in slide-in-from-left-3 duration-300 whitespace-nowrap">
             {[{ id: 'vec', label: '道路图' }, { id: 'sat', label: '卫星图' }, { id: 'white', label: '白板' }].map((sub) => (
               <button key={sub.id} onClick={(e) => { e.stopPropagation(); setMapType(sub.id); }} className={`px-4 py-2 rounded-md text-xs font-bold transition-all ${mapType === sub.id ? 'bg-[#9a6bff]/10 text-[#9a6bff]' : 'text-slate-500 hover:bg-slate-50'}`}>{sub.label}</button>
