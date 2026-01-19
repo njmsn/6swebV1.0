@@ -48,13 +48,19 @@ export const SiteManagementContent: React.FC = () => {
             导出
           </button>
         </div>
-        <div className="relative">
+        
+        {/* 优化后的搜索框 - 圆角弧度已调整为与下方按钮一致的 rounded-lg */}
+        <div className="relative group">
           <input 
             type="text" 
             placeholder="搜索工地名称..." 
-            className="w-64 h-8.5 pl-9 pr-4 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-[#9a6bff]/20 focus:border-[#9a6bff] outline-none transition-all"
+            className="w-64 h-9 pl-10 pr-4 bg-slate-50/50 border border-slate-200/80 rounded-lg text-[12px] font-medium text-slate-600 placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:ring-[#9a6bff]/10 focus:border-[#9a6bff]/50 outline-none transition-all duration-300"
           />
-          <svg className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#9a6bff] transition-colors duration-300">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
         </div>
       </div>
 
@@ -69,15 +75,15 @@ export const SiteManagementContent: React.FC = () => {
           </h3>
           <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar pr-1">
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-500">工地名称</label>
+              <label className="text-[12px] font-bold text-slate-500">工地名称</label>
               <input type="text" className="w-full h-8 px-3 bg-slate-50 border border-slate-100 rounded text-xs outline-none focus:border-[#9a6bff]/50 transition-colors" placeholder="输入名称关键字" />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-500">施工单位</label>
+              <label className="text-[12px] font-bold text-slate-500">施工单位</label>
               <input type="text" className="w-full h-8 px-3 bg-slate-50 border border-slate-100 rounded text-xs outline-none focus:border-[#9a6bff]/50 transition-colors" placeholder="搜索单位名称" />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-500">监护等级</label>
+              <label className="text-[12px] font-bold text-slate-500">监护等级</label>
               <select className="w-full h-8 px-2 bg-slate-50 border border-slate-100 rounded text-xs outline-none text-slate-600">
                 <option>全部等级</option>
                 <option>一级</option>
@@ -86,12 +92,12 @@ export const SiteManagementContent: React.FC = () => {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-slate-500">当前状态</label>
+              <label className="text-[12px] font-bold text-slate-500">当前状态</label>
               <div className="grid grid-cols-2 gap-2">
                 {['待处理', '监护中', '已完工', '异常'].map(s => (
                   <label key={s} className="flex items-center space-x-2 cursor-pointer group">
                     <div className="w-3.5 h-3.5 rounded border border-slate-200 group-hover:border-[#9a6bff] transition-colors"></div>
-                    <span className="text-[11px] font-medium text-slate-600">{s}</span>
+                    <span className="text-[12px] font-medium text-slate-600">{s}</span>
                   </label>
                 ))}
               </div>
@@ -99,10 +105,10 @@ export const SiteManagementContent: React.FC = () => {
           </div>
           {/* 操作按钮组：查询与重置 */}
           <div className="flex gap-2.5 mt-4">
-            <button className="flex-1 py-2 bg-[#9a6bff] text-white text-xs font-bold rounded-xl hover:bg-[#8558eb] transition-all active:scale-95 shadow-md shadow-[#9a6bff]/20">
+            <button className="flex-1 py-2 bg-[#9a6bff] text-white text-xs font-bold rounded-lg hover:bg-[#8558eb] transition-all active:scale-95 shadow-md shadow-[#9a6bff]/20">
               查询
             </button>
-            <button className="flex-1 py-2 bg-white border border-slate-200 text-slate-500 text-xs font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95">
+            <button className="flex-1 py-2 bg-white border border-slate-200 text-slate-500 text-xs font-bold rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95">
               重置
             </button>
           </div>
@@ -117,17 +123,17 @@ export const SiteManagementContent: React.FC = () => {
                   <th className="p-3 w-12 text-center">
                     <div className="w-4 h-4 border border-slate-300 rounded mx-auto cursor-pointer"></div>
                   </th>
-                  <th className="p-3 text-[11px] font-black text-slate-400 uppercase tracking-wider w-16 text-center">序号</th>
-                  <th className="p-3 text-[11px] font-black text-slate-400 uppercase tracking-wider">最后回报人</th>
-                  <th className="p-3 text-[11px] font-black text-slate-400 uppercase tracking-wider">最后回报日期</th>
-                  <th className="p-3 text-[11px] font-black text-slate-400 uppercase tracking-wider">状态</th>
-                  <th className="p-3 text-[11px] font-black text-slate-400 uppercase tracking-wider w-56">工地名称</th>
-                  <th className="p-3 text-[11px] font-black text-slate-400 uppercase tracking-wider w-64">工地地址</th>
-                  <th className="p-3 text-[11px] font-black text-slate-400 uppercase tracking-wider text-center">监护等级</th>
-                  <th className="p-3 text-[11px] font-black text-slate-400 uppercase tracking-wider">施工行业</th>
-                  <th className="p-3 text-[11px] font-black text-slate-400 uppercase tracking-wider">施工方式</th>
-                  <th className="p-3 text-[11px] font-black text-slate-400 uppercase tracking-wider text-center">累计监护(天)</th>
-                  <th className="p-3 text-[11px] font-black text-slate-400 uppercase tracking-wider">危险描述</th>
+                  <th className="p-3 text-[12px] font-black text-slate-400 uppercase tracking-wider w-16 text-center">序号</th>
+                  <th className="p-3 text-[12px] font-black text-slate-400 uppercase tracking-wider">最后回报人</th>
+                  <th className="p-3 text-[12px] font-black text-slate-400 uppercase tracking-wider">最后回报日期</th>
+                  <th className="p-3 text-[12px] font-black text-slate-400 uppercase tracking-wider">状态</th>
+                  <th className="p-3 text-[12px] font-black text-slate-400 uppercase tracking-wider w-56">工地名称</th>
+                  <th className="p-3 text-[12px] font-black text-slate-400 uppercase tracking-wider w-64">工地地址</th>
+                  <th className="p-3 text-[12px] font-black text-slate-400 uppercase tracking-wider text-center">监护等级</th>
+                  <th className="p-3 text-[12px] font-black text-slate-400 uppercase tracking-wider">施工行业</th>
+                  <th className="p-3 text-[12px] font-black text-slate-400 uppercase tracking-wider">施工方式</th>
+                  <th className="p-3 text-[12px] font-black text-slate-400 uppercase tracking-wider text-center">累计监护(天)</th>
+                  <th className="p-3 text-[12px] font-black text-slate-400 uppercase tracking-wider">危险描述</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -150,16 +156,16 @@ export const SiteManagementContent: React.FC = () => {
                       <td className="p-3 text-xs font-bold text-slate-700">{site.reporter}</td>
                       <td className="p-3 text-xs text-slate-400 font-medium font-mono whitespace-nowrap">{site.reportDate}</td>
                       <td className="p-3">
-                        {site.status === 'pending' && <span className="px-2.5 py-0.5 bg-blue-50 text-[#3b82f6] text-[10px] font-bold rounded-full border border-blue-100/50">待处理</span>}
-                        {site.status === 'monitoring' && <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full border border-emerald-100/50">监护中</span>}
-                        {site.status === 'error' && <span className="px-2.5 py-0.5 bg-rose-50 text-rose-500 text-[10px] font-bold rounded-full border border-rose-100/50">异常</span>}
+                        {site.status === 'pending' && <span className="px-2.5 py-0.5 bg-blue-50 text-[#3b82f6] text-[12px] font-bold rounded-full border border-blue-100/50">待处理</span>}
+                        {site.status === 'monitoring' && <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 text-[12px] font-bold rounded-full border border-emerald-100/50">监护中</span>}
+                        {site.status === 'error' && <span className="px-2.5 py-0.5 bg-rose-50 text-rose-500 text-[12px] font-bold rounded-full border border-rose-100/50">异常</span>}
                       </td>
                       <td className="p-3 text-xs font-bold text-slate-900 leading-relaxed">{site.siteName}</td>
                       <td className="p-3 text-xs text-slate-500 leading-relaxed font-medium">{site.address}</td>
                       <td className="p-3 text-center">
-                        {site.grade === '1' && <span className="inline-block px-2 py-0.5 bg-rose-50 text-rose-500 border border-rose-200 text-[10px] font-black rounded-md">一级</span>}
-                        {site.grade === '2' && <span className="inline-block px-2 py-0.5 bg-amber-50 text-amber-500 border border-amber-200 text-[10px] font-black rounded-md">二级</span>}
-                        {site.grade === '3' && <span className="inline-block px-2 py-0.5 bg-sky-50 text-sky-500 border border-sky-200 text-[10px] font-black rounded-md">三级</span>}
+                        {site.grade === '1' && <span className="inline-block px-2 py-0.5 bg-rose-50 text-rose-500 border border-rose-200 text-[12px] font-black rounded-md">一级</span>}
+                        {site.grade === '2' && <span className="inline-block px-2 py-0.5 bg-amber-50 text-amber-500 border border-amber-200 text-[12px] font-black rounded-md">二级</span>}
+                        {site.grade === '3' && <span className="inline-block px-2 py-0.5 bg-sky-50 text-sky-500 border border-sky-200 text-[12px] font-black rounded-md">三级</span>}
                       </td>
                       <td className="p-3 text-xs text-slate-600 font-medium">{site.industry}</td>
                       <td className="p-3 text-xs text-slate-600 font-medium">{site.method}</td>
@@ -173,7 +179,7 @@ export const SiteManagementContent: React.FC = () => {
           </div>
           {/* 表格底部分页预览 */}
           <div className="h-11 border-t border-slate-50 flex items-center justify-between px-6 bg-slate-50/30 shrink-0">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">共 4 条记录</span>
+            <span className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">共 4 条记录</span>
             <div className="flex space-x-1">
               <button className="w-7 h-7 rounded border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-white transition-colors"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2.5" /></svg></button>
               <button className="w-7 h-7 rounded bg-[#9a6bff] text-white flex items-center justify-center text-xs font-bold shadow-sm">1</button>

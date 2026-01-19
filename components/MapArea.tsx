@@ -40,7 +40,7 @@ const PersonnelPopup: React.FC<{
   
   const InfoRow = ({ label, value }: { label: string, value: string }) => (
     <div className="flex items-center py-1 border-b border-slate-50 last:border-0">
-      <span className="text-[#94a3b8] font-bold shrink-0 w-[60px] text-[11px]">{label}</span>
+      <span className="text-[#94a3b8] font-bold shrink-0 w-[60px] text-[12px]">{label}</span>
       <span className="text-[#334155] font-black truncate flex-1 pl-2 text-[12px]">{value || '--'}</span>
     </div>
   );
@@ -69,7 +69,7 @@ const PersonnelPopup: React.FC<{
       
       <div className="h-10 px-4 flex items-center justify-between border-b border-slate-50 shrink-0">
         <div className="flex items-center space-x-2">
-          <div className="w-1 h-3.5 bg-[#9a6bff] rounded-full"></div>
+          <div className="w-1 h-3.5 bg-primary rounded-full"></div>
           <span className="text-[12px] font-black text-slate-700 tracking-tight">员工详细档案</span>
         </div>
         <button onClick={onClose} className="text-slate-300 hover:text-rose-500 transition-all p-1 hover:bg-rose-50 rounded-lg"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg></button>
@@ -80,9 +80,9 @@ const PersonnelPopup: React.FC<{
           <div className="flex flex-col">
             <h2 className="text-[17px] font-black text-[#1e293b] tracking-tight mb-0.5">董仲良</h2>
             <div className="flex items-center space-x-2">
-               <span className="text-[#9a6bff] text-[10px] font-bold opacity-80 tracking-widest">ID: 325</span>
+               <span className="text-primary text-[12px] font-bold opacity-80 tracking-widest">ID: 325</span>
                <div className="w-1 h-1 bg-slate-200 rounded-full"></div>
-               <span className="text-emerald-500 text-[8px] font-black uppercase tracking-tight">On duty</span>
+               <span className="text-emerald-500 text-[12px] font-black uppercase tracking-tight">On duty</span>
             </div>
           </div>
           <img src={person.image} className="w-11 h-11 rounded-xl border-2 border-white shadow-lg object-cover" />
@@ -90,7 +90,7 @@ const PersonnelPopup: React.FC<{
         
         <div className="flex bg-slate-50 p-1 rounded-xl mb-1 border border-slate-100 shrink-0">
           {['实时', '计划', '历史'].map((tab) => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${activeTab === tab ? 'bg-white text-[#9a6bff] shadow-sm' : 'text-slate-400'}`}>{tab}</button>
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-1.5 text-[12px] font-black rounded-lg transition-all ${activeTab === tab ? 'bg-white text-primary shadow-sm' : 'text-slate-400'}`}>{tab}</button>
           ))}
         </div>
       </div>
@@ -108,8 +108,8 @@ const PersonnelPopup: React.FC<{
             <InfoRow label="下班" value="2025-05-22 17:30:00" />
             <InfoRow label="同步" value="2025-05-22 11:20:45" />
             <div className="flex items-center py-1 border-b border-slate-50 last:border-0">
-              <span className="text-[#94a3b8] font-bold shrink-0 w-[60px] text-[11px]">角色</span>
-              <span className="text-[#9a6bff] font-black truncate flex-1 pl-2 text-[12px]">巡检组长</span>
+              <span className="text-[#94a3b8] font-bold shrink-0 w-[60px] text-[12px]">角色</span>
+              <span className="text-primary font-black truncate flex-1 pl-2 text-[12px]">巡检组长</span>
             </div>
           </div>
         )}
@@ -119,7 +119,7 @@ const PersonnelPopup: React.FC<{
             {historyData.map((item, index) => (
               <div key={index} className="py-3 first:pt-1 last:pb-0">
                 <div className="text-[12px] font-black text-slate-600 mb-1">{item.time}</div>
-                <div className="text-[11px] font-medium text-slate-400 leading-relaxed">{item.desc}</div>
+                <div className="text-[12px] font-medium text-slate-400 leading-relaxed">{item.desc}</div>
               </div>
             ))}
           </div>
@@ -128,7 +128,7 @@ const PersonnelPopup: React.FC<{
         {activeTab === '计划' && (
           <div className="flex flex-col items-center justify-center h-full text-slate-300 space-y-2 opacity-60 animate-in fade-in duration-300 min-h-[150px]">
              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-             <span className="text-[11px] font-bold">暂无今日排班计划</span>
+             <span className="text-[12px] font-bold">暂无今日排班计划</span>
           </div>
         )}
       </div>
@@ -136,7 +136,7 @@ const PersonnelPopup: React.FC<{
       {activeTab === '实时' && (
         <div className="border-t border-slate-50 px-5 py-4 flex flex-col bg-[#fcfdfe] rounded-b-2xl shrink-0 animate-in slide-in-from-bottom-2 duration-300">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-black text-[#94a3b8] uppercase tracking-[0.05em]">PROGRESS</span>
+            <span className="text-[12px] font-black text-[#94a3b8] uppercase tracking-[0.05em]">PROGRESS</span>
             <div className="flex items-center">
                <div className="flex items-center space-x-3 pr-3">
                   <div className="flex items-center">
@@ -144,20 +144,20 @@ const PersonnelPopup: React.FC<{
                       <rect x="2" y="7" width="16" height="10" rx="1.5" />
                       <path d="M20 10v4" />
                     </svg>
-                    <span className="text-[10px] font-black ml-1 text-slate-500">{person.battery}%</span>
+                    <span className="text-[12px] font-black ml-1 text-slate-500">{person.battery}%</span>
                   </div>
                   <div className="flex items-center">
                     <div className={`w-1.5 h-1.5 rounded-full ${statusDotColor}`}></div>
-                    <span className="text-[10px] font-black ml-1 text-slate-500">GPS: {getGpsStatus()}</span>
+                    <span className="text-[12px] font-black ml-1 text-slate-500">GPS: {getGpsStatus()}</span>
                   </div>
                </div>
                <div className="flex items-center space-x-3 border-l border-slate-100 pl-3">
-                 <span className="text-[12px] font-black text-[#9a6bff]">{person.progress}%</span>
+                 <span className="text-[12px] font-black text-primary">{person.progress}%</span>
                </div>
             </div>
           </div>
           <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-[#9a6bff] transition-all duration-1000 ease-out rounded-full" style={{ width: `${person.progress}%` }}></div>
+            <div className="h-full bg-primary transition-all duration-1000 ease-out rounded-full" style={{ width: `${person.progress}%` }}></div>
           </div>
         </div>
       )}
@@ -255,7 +255,9 @@ export const MapArea: React.FC = () => {
     MOCK_MAP_POINTS.forEach((point) => {
       const lat = 39.0145 + (point.y - 50) * 0.001;
       const lng = 117.7126 + (point.x - 50) * 0.002;
-      const statusColor = point.status === 'normal' ? '#9a6bff' : point.status === 'warning' ? '#f59e0b' : '#f43f5e';
+      // 使用 CSS 变量获取当前主色，或者根据 point 状态映射
+      const currentPrimaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+      const statusColor = point.status === 'normal' ? currentPrimaryColor : point.status === 'warning' ? '#f59e0b' : '#f43f5e';
       const icon = L.divIcon({
         className: 'custom-div-icon',
         html: `<div class="relative flex items-center justify-center"><div class="absolute w-12 h-12 rounded-full opacity-40 ping-animation" style="background-color: ${statusColor}"></div><div class="w-10 h-10 rounded-lg border-2 border-white overflow-hidden shadow-xl bg-white relative z-10" style="border-color: ${statusColor}"><img src="${point.image}" class="w-full h-full object-cover" /></div></div>`,
@@ -298,8 +300,8 @@ export const MapArea: React.FC = () => {
         onClick={onClick}
         className={`w-11 h-11 rounded-xl shadow-lg flex items-center justify-center transition-all border active:scale-95 ${
           isActive 
-          ? 'bg-[#9a6bff] text-white border-[#9a6bff] shadow-[#9a6bff]/30' 
-          : 'bg-white text-slate-500 hover:text-[#9a6bff] border-slate-50 hover:shadow-xl'
+          ? 'bg-primary text-white border-primary shadow-primary/30' 
+          : 'bg-white text-slate-500 hover:text-primary border-slate-50 hover:shadow-xl'
         }`}
       >
         {icon}
@@ -326,7 +328,7 @@ export const MapArea: React.FC = () => {
       )}
 
       <div className="absolute top-6 right-6 z-40 flex flex-col items-end">
-        <button onClick={() => setIsLayerPanelOpen(!isLayerPanelOpen)} className={`w-11 h-11 rounded-xl shadow-lg flex items-center justify-center transition-all active:scale-95 group border border-slate-50 ${isLayerPanelOpen ? 'bg-[#9a6bff] text-white shadow-[#9a6bff]/30' : 'bg-white text-slate-500 hover:text-[#9a6bff] hover:shadow-xl'}`}>
+        <button onClick={() => setIsLayerPanelOpen(!isLayerPanelOpen)} className={`w-11 h-11 rounded-xl shadow-lg flex items-center justify-center transition-all active:scale-95 group border border-slate-50 ${isLayerPanelOpen ? 'bg-primary text-white shadow-primary/30' : 'bg-white text-slate-500 hover:text-primary hover:shadow-xl'}`}>
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 12 12 17 22 12" /><polyline points="2 17 12 22 22 17" />
           </svg>
@@ -336,7 +338,7 @@ export const MapArea: React.FC = () => {
             {layers.map((group) => (
               <div key={group.id} className="mb-1">
                 <div className="flex items-center group/title relative">
-                  <button onClick={() => toggleGroupFold(group.id)} className="w-4 h-4 border border-slate-300 bg-white flex items-center justify-center text-[10px] text-slate-400 hover:text-slate-600 transition-colors mr-1.5 relative z-10">{group.isOpen ? '-' : '+'}</button>
+                  <button onClick={() => toggleGroupFold(group.id)} className="w-4 h-4 border border-slate-300 bg-white flex items-center justify-center text-[12px] text-slate-400 hover:text-slate-600 transition-colors mr-1.5 relative z-10">{group.isOpen ? '-' : '+'}</button>
                   <div onClick={() => handleGroupCheck(group.id)} className={`w-4 h-4 rounded border transition-colors flex items-center justify-center cursor-pointer mr-3 ${group.checked ? 'bg-[#3b82f6] border-[#3b82f6] text-white' : 'bg-white border-slate-300 hover:border-[#3b82f6]'}`}><svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><polyline points="20 6 9 17 4 12"/></svg></div>
                   <span className="text-[12px] font-bold text-slate-700 tracking-tight">{group.label}</span>
                 </div>
@@ -349,7 +351,7 @@ export const MapArea: React.FC = () => {
                         <div onClick={() => handleItemCheck(group.id, item.id)} className={`w-4 h-4 rounded border flex items-center justify-center cursor-pointer mr-3 shrink-0 ${item.checked ? 'bg-[#3b82f6] border-[#3b82f6] text-white' : 'bg-white border-slate-300'}`}><svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><polyline points="20 6 9 17 4 12"/></svg></div>
                         <div className="flex items-center space-x-2.5 overflow-hidden">
                           <div className="w-4 h-4 flex items-center justify-center shrink-0">{item.icon}</div>
-                          <span className={`text-[11px] font-medium transition-colors truncate ${item.checked ? 'text-slate-700' : 'text-slate-400'}`}>{item.label}</span>
+                          <span className={`text-[12px] font-medium transition-colors truncate ${item.checked ? 'text-slate-700' : 'text-slate-400'}`}>{item.label}</span>
                         </div>
                       </div>
                     ))}
@@ -364,26 +366,26 @@ export const MapArea: React.FC = () => {
       <div className="absolute bottom-6 left-6 z-40 flex flex-col space-y-2">
         <MapControlButton label="刷新" onClick={handleRefresh} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeWidth="2" /></svg>} />
         <MapControlButton label="总览" onClick={() => mapRef.current?.setView([39.0145, 117.7126], 14, { animate: true })} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" strokeWidth="2"/></svg>} />
-        <MapControlButton label="测量" isActive={activeTool === 'measure'} onClick={() => setActiveTool(activeTool === 'measure' ? null : 'measure')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path d="M12 4v12m0 0l-3-3m3 3l3-3M6 19h12" /></svg>}>
+        <MapControlButton label="测量" isActive={activeTool === 'measure'} onClick={() => setActiveTool(activeTool === 'measure' ? null : 'measure')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.3 4.7a3.1 3.1 0 0 1 0 4.3L8.7 21.6a3.1 3.1 0 0 1-4.3 0L2.4 19.6a3.1 3.1 0 0 1 0-4.3L15.1 2.7a3.1 3.1 0 0 1 4.3 0l1.9 2z" /><path d="M7.5 10.5l2 2M10.5 7.5l2 2M13.5 4.5l2 2" /></svg>}>
           <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 flex flex-row items-center bg-white rounded-lg shadow-xl border border-slate-100 p-1.5 animate-in fade-in slide-in-from-left-3 duration-300 whitespace-nowrap">
             {['测距', '面积', '角度'].map((tool) => (
-              <button key={tool} onClick={(e) => { e.stopPropagation(); }} className="px-4 py-2 rounded-md text-xs font-bold text-slate-500 hover:bg-[#9a6bff]/10 hover:text-[#9a6bff] transition-all">{tool}</button>
+              <button key={tool} onClick={(e) => { e.stopPropagation(); }} className="px-4 py-2 rounded-md text-[12px] font-bold text-slate-500 hover:bg-primary/10 hover:text-primary transition-all">{tool}</button>
             ))}
           </div>
         </MapControlButton>
         <MapControlButton label="统计" isActive={activeTool === 'stats'} onClick={() => setActiveTool(activeTool === 'stats' ? null : 'stats')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeWidth="2"/></svg>}>
           <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 flex flex-row items-center bg-white rounded-lg shadow-xl border border-slate-100 p-1.5 animate-in fade-in slide-in-from-left-3 duration-300 whitespace-nowrap">
             {['绘图', '计算', '清除'].map((tool) => (
-              <button key={tool} onClick={(e) => { e.stopPropagation(); }} className="px-4 py-2 rounded-md text-xs font-bold text-slate-500 hover:bg-[#9a6bff]/10 hover:text-[#9a6bff] transition-all">{tool}</button>
+              <button key={tool} onClick={(e) => { e.stopPropagation(); }} className="px-4 py-2 rounded-md text-[12px] font-bold text-slate-500 hover:bg-primary/10 hover:text-primary transition-all">{tool}</button>
             ))}
           </div>
         </MapControlButton>
-        <MapControlButton label="要素识别" isActive={activeTool === 'identify'} onClick={() => setActiveTool(activeTool === 'identify' ? null : 'identify')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2"/></svg>} />
+        <MapControlButton label="要素识别" isActive={activeTool === 'identify'} onClick={() => setActiveTool(activeTool === 'identify' ? null : 'identify')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9V6a2 2 0 012-2h3M15 4h3a2 2 0 012 2v3M20 15v3a2 2 0 01-2 2h-3M9 20H6a2 2 0 01-2-2v-3" /><path d="M7 12h10" /></svg>} />
         <MapControlButton label="全屏" isActive={isFullscreen} onClick={handleFullscreen} icon={isFullscreen ? (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 14h6v6M20 10h-6V4M14 20v-6h6M10 4v6H4" /></svg>) : (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 3h6v6M9 21H3v-6M21 15v6h-6M3 9V3h6" /></svg>)} />
         <MapControlButton label="地图" isActive={activeTool === 'mapType'} onClick={() => setActiveTool(activeTool === 'mapType' ? null : 'mapType')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" strokeWidth="2"/></svg>} >
           <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 flex flex-row items-center bg-white rounded-lg shadow-xl border border-slate-100 p-1.5 animate-in fade-in slide-in-from-left-3 duration-300 whitespace-nowrap">
             {[{ id: 'vec', label: '道路图' }, { id: 'sat', label: '卫星图' }, { id: 'white', label: '白板' }].map((sub) => (
-              <button key={sub.id} onClick={(e) => { e.stopPropagation(); setMapType(sub.id); }} className={`px-4 py-2 rounded-md text-xs font-bold transition-all ${mapType === sub.id ? 'bg-[#9a6bff]/10 text-[#9a6bff]' : 'text-slate-500 hover:bg-slate-50'}`}>{sub.label}</button>
+              <button key={sub.id} onClick={(e) => { e.stopPropagation(); setMapType(sub.id); }} className={`px-4 py-2 rounded-md text-[12px] font-bold transition-all ${mapType === sub.id ? 'bg-primary/10 text-primary' : 'text-slate-500 hover:bg-slate-50'}`}>{sub.label}</button>
             ))}
           </div>
         </MapControlButton>

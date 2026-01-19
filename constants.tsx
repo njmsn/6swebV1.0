@@ -54,35 +54,42 @@ export const MOCK_PERSONNEL: Personnel[] = [
   }
 ];
 
+// 车辆图标 SVG Data URIs，匹配用户提供的 PNG 风格
+const BLUE_CAR_SVG = `data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect x='5' y='5' width='90' height='90' rx='28' fill='%23dbeafe' stroke='%233b82f6' stroke-width='2'/><path d='M28 62h44v10H28zM34 50l6-18h20l6 18z' fill='none' stroke='%233b82f6' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='38' cy='72' r='5' fill='%233b82f6'/><circle cx='62' cy='72' r='5' fill='%233b82f6'/></svg>`;
+
+const RED_CAR_SVG = `data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect x='5' y='5' width='90' height='90' rx='28' fill='%23fee2e2' stroke='%23ef4444' stroke-width='2'/><path d='M28 62h44v10H28zM34 50l6-18h20l6 18z' fill='none' stroke='%23ef4444' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='38' cy='72' r='5' fill='%23ef4444'/><circle cx='62' cy='72' r='5' fill='%23ef4444'/></svg>`;
+
+const BLUE_TRUCK_SVG = `data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect x='5' y='5' width='90' height='90' rx='28' fill='%23dbeafe' stroke='%233b82f6' stroke-width='2'/><path d='M30 65h40v8H30zM35 65V52h18v13M53 58l10 7h7v8h-7M30 52l12-14h10l5 14' fill='none' stroke='%233b82f6' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='38' cy='73' r='5' fill='%233b82f6'/><circle cx='65' cy='73' r='5' fill='%233b82f6'/></svg>`;
+
 export const MOCK_VEHICLES: Personnel[] = [
   {
     id: 'v1',
     name: '津A·D3921',
-    role: '抢修工程车',
+    role: '常规巡逻车',
     location: '泰达运维站',
     progress: 25,
     tasks: 2,
-    avatar: 'https://img.icons8.com/color/100/delivery-truck.png',
+    avatar: BLUE_CAR_SVG,
     status: 'online'
   },
   {
     id: 'v2',
     name: '津B·K9012',
-    role: '巡线车',
+    role: '紧急调度车',
     location: '滨海中心站',
     progress: 78,
     tasks: 5,
-    avatar: 'https://img.icons8.com/color/100/truck.png',
+    avatar: RED_CAR_SVG,
     status: 'online'
   },
   {
     id: 'v3',
     name: '津A·F8822',
-    role: '应急指挥车',
+    role: '抢修工程车',
     location: '城北运维中心',
     progress: 40,
     tasks: 1,
-    avatar: 'https://img.icons8.com/color/100/suv.png',
+    avatar: BLUE_TRUCK_SVG,
     status: 'online'
   }
 ];

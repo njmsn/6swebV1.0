@@ -89,7 +89,7 @@ const App: React.FC = () => {
       )}
 
       {/* 右侧主容器 */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 gap-2.5 overflow-hidden ${isFullscreen ? 'p-0' : 'py-2.5 pr-2.5 pl-2.5'}`}>
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 gap-1.5 overflow-hidden ${isFullscreen ? 'p-0' : 'py-2 pr-2.5 pl-2.5'}`}>
         {/* 顶部栏 - 全屏时隐藏 */}
         {!isFullscreen && <Header />}
 
@@ -107,14 +107,14 @@ const App: React.FC = () => {
                       onClick={() => setActiveTab(tab.id)}
                       className={`group flex items-center h-full px-4 rounded-t-xl transition-all cursor-pointer border-t border-x relative -mb-[1px] ${
                         activeTab === tab.id 
-                        ? 'bg-white border-slate-100 text-[#9a6bff] z-10 shadow-[0_-2px_10px_-4px_rgba(0,0,0,0.05)]' 
+                        ? 'bg-white border-slate-100 text-primary z-10 shadow-[0_-2px_10px_-4px_rgba(0,0,0,0.05)]' 
                         : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'
                       }`}
                     >
-                      <span className={`mr-2 transition-colors ${activeTab === tab.id ? 'text-[#9a6bff]' : 'text-slate-300'}`}>
+                      <span className={`mr-2 transition-colors ${activeTab === tab.id ? 'text-primary' : 'text-slate-300'}`}>
                         {tab.icon}
                       </span>
-                      <span className="text-[10px] font-bold whitespace-nowrap">{tab.label}</span>
+                      <span className="text-[12px] font-bold whitespace-nowrap">{tab.label}</span>
                       <button 
                         onClick={(e) => handleCloseTab(tab.id, e)}
                         className={`ml-3 p-0.5 hover:bg-slate-100 rounded-full transition-opacity ${activeTab === tab.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'}`}
@@ -133,7 +133,7 @@ const App: React.FC = () => {
                   onClick={() => setIsTabDropdownOpen(!isTabDropdownOpen)}
                   className={`p-1.5 rounded-lg transition-all ${
                     isTabDropdownOpen 
-                    ? 'text-[#9a6bff] bg-[#9a6bff]/5' 
+                    ? 'text-primary bg-primary/5' 
                     : 'text-slate-300 hover:text-slate-500 hover:bg-slate-100'
                   }`}
                 >
@@ -146,7 +146,7 @@ const App: React.FC = () => {
                   isTabDropdownOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
                 }`}>
                   <div className="px-3 py-1 mb-1 border-b border-slate-50">
-                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">已打开的页签</span>
+                    <span className="text-[12px] font-black text-slate-300 uppercase tracking-widest">已打开的页签</span>
                   </div>
                   {openTabs.map((tab) => (
                     <button
@@ -157,17 +157,17 @@ const App: React.FC = () => {
                       }}
                       className={`w-full flex items-center px-3 py-2 text-left transition-colors group ${
                         activeTab === tab.id 
-                        ? 'bg-[#9a6bff]/5 text-[#9a6bff]' 
+                        ? 'bg-primary/5 text-primary' 
                         : 'text-slate-600 hover:bg-slate-50'
                       }`}
                     >
-                      <span className={`mr-2.5 ${activeTab === tab.id ? 'text-[#9a6bff]' : 'text-slate-300'}`}>
+                      <span className={`mr-2.5 ${activeTab === tab.id ? 'text-primary' : 'text-slate-300'}`}>
                         {tab.icon}
                       </span>
-                      <span className="text-[10px] font-bold flex-1">{tab.label}</span>
+                      <span className="text-[12px] font-bold flex-1">{tab.label}</span>
                       <div className="flex items-center">
                         {activeTab === tab.id && (
-                          <div className="w-1 h-1 bg-[#9a6bff] rounded-full mr-2"></div>
+                          <div className="w-1 h-1 bg-primary rounded-full mr-2"></div>
                         )}
                         <div 
                           onClick={(e) => handleCloseTab(tab.id, e)}
@@ -195,11 +195,11 @@ const App: React.FC = () => {
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50/40">
                   <div className="p-10 bg-white rounded-3xl shadow-xl border border-slate-100 flex flex-col items-center max-w-sm text-center">
-                    <div className="w-20 h-20 bg-[#9a6bff]/5 rounded-3xl flex items-center justify-center mb-6 text-[#9a6bff]/40">
+                    <div className="w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mb-6 text-primary/40">
                       {openTabs.find(t => t.id === activeTab)?.icon}
                     </div>
                     <h3 className="text-slate-800 font-black text-lg mb-2 tracking-tight">{getLabel(activeTab)}</h3>
-                    <p className="text-xs text-slate-400 leading-relaxed font-medium">模块数据正由运维中心同步至云端，请稍后刷新查看。</p>
+                    <p className="text-[12px] text-slate-400 leading-relaxed font-medium">模块数据正由运维中心同步至云端，请稍后刷新查看。</p>
                   </div>
                 </div>
               )}
@@ -207,7 +207,7 @@ const App: React.FC = () => {
 
             {activeTab === NavigationTab.RealTime && (
               <aside 
-                className={`transition-all duration-500 ease-in-out border-l border-slate-50 bg-white flex flex-col relative z-20 ${
+                className={`transition-all duration-500 ease-in-out border-l border-slate-50 bg-white flex flex-col relative z-[50] overflow-visible ${
                   isPanelOpen 
                     ? 'w-[400px] shadow-[-25px_0_50px_-20px_rgba(0,0,0,0.1)]' 
                     : 'w-16 shadow-none'

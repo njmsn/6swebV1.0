@@ -8,8 +8,37 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: 'var(--primary-color, #9a6bff)',
+              'primary-hover': 'var(--primary-hover, #8558eb)',
+              'sidebar-bg': 'var(--sidebar-bg, #080b1a)',
+              'submenu-bg': 'var(--submenu-bg, #121629)',
+            }
+          }
+        }
+      }
+    </script>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      
+      :root {
+        --primary-color: #9a6bff;
+        --primary-hover: #8558eb;
+        --sidebar-bg: #080b1a;
+        --submenu-bg: #121629;
+        --sidebar-border: rgba(255, 255, 255, 0.05);
+        --sidebar-item-hover: rgba(255, 255, 255, 0.05);
+        --sidebar-text: #64748b;
+        --submenu-item-active: #1e253c;
+        --submenu-text: #94a3b8;
+        --submenu-title: #cbd5e1;
+        --logo-filter: drop-shadow(0 0 8px rgba(255,255,255,0.15));
+      }
+
       body {
         font-family: 'Inter', sans-serif;
         margin: 0;
@@ -42,7 +71,7 @@
         color: white;
         padding: 6px 12px;
         border-radius: 8px;
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 700;
         white-space: nowrap;
         position: relative;
@@ -99,16 +128,16 @@
         animation: sonar-wave 2s infinite ease-out;
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/"
-  }
-}
-</script>
-</head>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react/": "https://esm.sh/react@^19.2.3/"
+      }
+    }
+    </script>
+  </head>
   <body>
     <div id="root"></div>
   </body>
