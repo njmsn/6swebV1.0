@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { MOCK_MAP_POINTS } from '../constants.tsx';
 
@@ -31,6 +30,278 @@ interface LayerGroup {
   checked: boolean;
 }
 
+// “查看全部”任务列表弹窗
+const AllTasksPopup: React.FC<{
+  data: any;
+  onClose: () => void;
+}> = ({ data, onClose }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10; // 修改为每页 10 条
+  const totalTasks = data.tasks.length;
+  // 模拟一些额外数据以展示分页效果
+  const mockAllTasks = [...data.tasks, ...data.tasks, ...data.tasks].map((t, i) => ({...t, id: `${t.id}-${i}`}));
+  const displayTotal = mockAllTasks.length;
+  const totalPages = Math.ceil(displayTotal / pageSize);
+  
+  const currentTasks = mockAllTasks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  return (
+    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.25)] border border-slate-100 z-[2001] w-[560px] overflow-hidden flex flex-col animate-in zoom-in-95 fade-in duration-300">
+      {/* 头部 */}
+      <div className="h-14 px-6 flex items-center justify-between border-b border-slate-50 bg-slate-50/30">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-1 h-4 bg-primary rounded-full"></div>
+          <span className="text-[13px] text-slate-700 font-bold">{data.name} 的全部任务</span>
+        </div>
+        <button onClick={onClose} className="text-slate-300 hover:text-rose-500 transition-all p-1.5 hover:bg-rose-50 rounded-xl">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      {/* 表格内容 */}
+      <div className="p-4 flex-1 min-h-[480px]">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-slate-100">
+              <th className="pb-3 text-[12px] font-bold text-slate-400 w-12 text-center">序号</th>
+              <th className="pb-3 text-[12px] font-bold text-slate-400 w-24 pl-2">计划编号</th>
+              <th className="pb-3 text-[12px] font-bold text-slate-400">任务名称</th>
+              <th className="pb-3 text-[12px] font-bold text-slate-400 text-right pr-4">完成时间</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-50">
+            {currentTasks.map((task, idx) => (
+              <tr key={task.id} className="hover:bg-slate-50 transition-colors group">
+                <td className="py-3 text-[12px] font-bold text-slate-400 text-center">{(currentPage - 1) * pageSize + idx + 1}</td>
+                <td className="py-3 pl-2 text-[12px] font-bold text-slate-700 uppercase tracking-tight">T-{((currentPage - 1) * pageSize + idx + 1).toString().padStart(3, '0')}</td>
+                <td className="py-3 pr-2">
+                  <div className="text-[12px] font-normal text-slate-600 line-clamp-1" title={task.address}>{task.address}</div>
+                </td>
+                <td className="py-3 text-[12px] font-normal text-slate-400 font-mono text-right pr-4">
+                  {task.status === 'completed' ? task.time : '--'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* 分页控制 */}
+      <div className="px-6 py-4 bg-slate-50/30 border-t border-slate-50 flex items-center justify-between">
+        <span className="text-[12px] text-slate-400 font-bold">共 {displayTotal} 项数据</span>
+        <div className="flex items-center space-x-2">
+          <button 
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(prev => prev - 1)}
+            className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-primary hover:border-primary disabled:opacity-30 disabled:pointer-events-none transition-all"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2.5"/></svg>
+          </button>
+          
+          <div className="flex items-center space-x-1">
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`w-7 h-7 rounded-lg text-[12px] font-bold transition-all ${
+                  currentPage === i + 1 
+                  ? 'bg-primary text-white shadow-md shadow-primary/20' 
+                  : 'text-slate-400 hover:bg-white border border-transparent hover:border-slate-200'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          <button 
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(prev => prev + 1)}
+            className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-primary hover:border-primary disabled:opacity-30 disabled:pointer-events-none transition-all"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2.5"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 任务详情弹窗组件
+const TaskDetailPopup: React.FC<{ 
+  task: any; 
+  onClose: () => void;
+}> = ({ task, onClose }) => {
+  const [activeTab, setActiveTab] = useState('信息');
+
+  const InfoRow = ({ label, value }: { label: string, value: string }) => (
+    <div className="flex items-center py-2 border-b border-slate-50 last:border-0">
+      <span className="text-[#94a3b8] shrink-0 w-24 text-[12px] font-normal">{label}</span>
+      <span className="text-[#334155] flex-1 text-[12px] font-normal">{value || '--'}</span>
+    </div>
+  );
+
+  // 模拟按日期分组的照片数据
+  const photoGroups = [
+    {
+      date: '2025-05-22',
+      photos: [
+        { id: 1, url: 'https://picsum.photos/seed/task1/200/200' },
+        { id: 2, url: 'https://picsum.photos/seed/task2/200/200' },
+        { id: 5, url: 'https://picsum.photos/seed/task5/200/200' },
+        { id: 6, url: 'https://picsum.photos/seed/task6/200/200' },
+        { id: 7, url: 'https://picsum.photos/seed/task7/200/200' }
+      ]
+    },
+    {
+      date: '2025-05-21',
+      photos: [
+        { id: 3, url: 'https://picsum.photos/seed/task3/200/200' },
+        { id: 4, url: 'https://picsum.photos/seed/task4/200/200' },
+        { id: 8, url: 'https://picsum.photos/seed/task8/200/200' }
+      ]
+    }
+  ];
+
+  // 模拟回报记录数据
+  const reportLogs = [
+    { 
+      id: 1, 
+      reporter: '王力宏', 
+      time: '2025-05-22 10:45', 
+      status: '处理成功', 
+      type: 'success'
+    },
+    { 
+      id: 2, 
+      reporter: '王力宏', 
+      time: '2025-05-21 16:30', 
+      status: '处理中', 
+      type: 'pending'
+    },
+    { 
+      id: 3, 
+      reporter: '王力宏', 
+      time: '2025-05-21 09:15', 
+      status: '已接收', 
+      type: 'received'
+    }
+  ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
+  return (
+    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.25)] border border-slate-100 z-[2000] w-[380px] overflow-hidden flex flex-col animate-in zoom-in-95 fade-in duration-300">
+      {/* 头部 */}
+      <div className="h-14 px-6 flex items-center justify-between border-b border-slate-50 bg-slate-50/30">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-1 h-4 bg-primary rounded-full"></div>
+          <span className="text-[13px] text-slate-700 font-normal">任务详情</span>
+        </div>
+        <button onClick={onClose} className="text-slate-300 hover:text-rose-500 transition-all p-1.5 hover:bg-rose-50 rounded-xl">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      {/* 页签切换器 */}
+      <div className="px-6 pt-4 pb-1">
+        <div className="flex space-x-8 border-b border-slate-100">
+          {['信息', '图片', '回报'].map((tab) => (
+            <button 
+              key={tab} 
+              onClick={() => setActiveTab(tab)} 
+              className={`pb-3 text-[13px] transition-all relative font-normal ${
+                activeTab === tab ? 'text-primary' : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              {tab}
+              {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"></div>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 内容区 */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-6 min-h-[280px] pb-8">
+        {activeTab === '信息' && (
+          <div className="space-y-0 animate-in fade-in duration-300">
+            <InfoRow label="任务编号" value={`T-${task.id.toUpperCase()}`} />
+            <InfoRow label="地理位置" value={task.address || '天津市滨海新区顺民早点 (百姓号)'} />
+            <InfoRow label="上报时间" value={task.time || '01/04 10:39'} />
+            <InfoRow label="任务状态" value={task.status === 'completed' ? '已完成' : '待处理'} />
+            <InfoRow label="巡检类型" value="场站常规巡检" />
+            <InfoRow label="负责人" value="王力宏" />
+            <InfoRow label="备注说明" value="该路段需重点关注阀门压力波动" />
+          </div>
+        )}
+
+        {activeTab === '图片' && (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {photoGroups.map((group) => (
+              <div key={group.date} className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <div className="w-1.5 h-1.5 bg-slate-200 rounded-full"></div>
+                  <span className="text-[12px] text-slate-400 font-mono">
+                    {group.date}
+                  </span>
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {group.photos.map(photo => (
+                    <div key={photo.id} className="aspect-square bg-slate-50 rounded-md overflow-hidden border border-slate-100 group cursor-zoom-in relative">
+                      <img src={photo.url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === '回报' && (
+          <div className="space-y-5 animate-in fade-in duration-300 py-1">
+            {reportLogs.map((log) => (
+              <div key={log.id} className="relative pl-7 border-l-2 border-dashed border-slate-100 pb-0 last:border-0">
+                {/* 时间轴节点 */}
+                <div className="absolute left-[-6px] top-1.5 w-2.5 h-2.5 rounded-full bg-slate-200 ring-4 ring-white"></div>
+                
+                {/* 状态卡片 */}
+                <div className="bg-slate-50/50 p-2.5 rounded-2xl border border-slate-100/50 mb-2 group hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className={`flex items-center space-x-2 ${
+                      log.type === 'success' ? 'text-emerald-600' : 
+                      log.type === 'pending' ? 'text-blue-500' : 'text-slate-500'
+                    }`}>
+                      {log.type === 'success' ? (
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                      ) : log.type === 'pending' ? (
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      ) : (
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                      )}
+                      <span className="text-[12px] font-normal">{log.status}</span>
+                    </div>
+                    <span className="text-[12px] text-slate-400 font-mono font-normal tracking-tight">{log.time}</span>
+                  </div>
+                </div>
+                
+                {/* 汇报人信息 + 明细按钮 (已移除右侧箭头图标) */}
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center">
+                    <span className="text-[12px] text-[#94a3b8] mr-2 font-normal">汇报人</span>
+                    <span className="text-[12px] text-slate-600 font-normal">{log.reporter}</span>
+                  </div>
+                  <button className="flex items-center px-3.5 py-1 bg-primary text-white rounded-lg text-[12px] font-normal transition-all hover:bg-primary-hover active:scale-95 group/detail shadow-sm shadow-primary/20">
+                    <span>明细</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const PersonnelPopup: React.FC<{ 
   person: any; 
   position: { x: number, y: number }; 
@@ -40,8 +311,8 @@ const PersonnelPopup: React.FC<{
   
   const InfoRow = ({ label, value }: { label: string, value: string }) => (
     <div className="flex items-center py-1 border-b border-slate-50 last:border-0">
-      <span className="text-[#94a3b8] font-bold shrink-0 w-[60px] text-[12px]">{label}</span>
-      <span className="text-[#334155] font-black truncate flex-1 pl-2 text-[12px]">{value || '--'}</span>
+      <span className="text-[#94a3b8] shrink-0 w-[60px] text-[12px] font-normal">{label}</span>
+      <span className="text-[#334155] truncate flex-1 pl-2 text-[12px] font-normal">{value || '--'}</span>
     </div>
   );
 
@@ -63,26 +334,26 @@ const PersonnelPopup: React.FC<{
 
   return (
     <div className="absolute bg-white rounded-2xl shadow-[0_35px_80px_-15px_rgba(0,0,0,0.25)] border border-slate-100 z-[1000] overflow-visible flex flex-col animate-in zoom-in-95 fade-in duration-500 ease-out"
-      style={{ width: '330px', height: '430px', left: `${position.x}px`, top: `${position.y - 28}px`, transform: 'translate(-50%, -100%)' }}>
+      style={{ width: '330px', height: '475px', left: `${position.x}px`, top: `${position.y - 28}px`, transform: 'translate(-50%, -100%)' }}>
       
       <div className="absolute bottom-[-11px] left-1/2 -translate-x-1/2 w-0 h-0" style={{ borderLeft: '12px solid transparent', borderRight: '12px solid transparent', borderTop: '12px solid white', filter: 'drop-shadow(0 5px 3px rgba(0,0,0,0.08))' }}></div>
       
       <div className="h-10 px-4 flex items-center justify-between border-b border-slate-50 shrink-0">
         <div className="flex items-center space-x-2">
           <div className="w-1 h-3.5 bg-primary rounded-full"></div>
-          <span className="text-[12px] font-black text-slate-700 tracking-tight">员工详细档案</span>
+          <span className="text-[12px] text-slate-700 tracking-tight font-normal">员工详细档案</span>
         </div>
-        <button onClick={onClose} className="text-slate-300 hover:text-rose-500 transition-all p-1 hover:bg-rose-50 rounded-lg"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg></button>
+        <button onClick={onClose} className="text-slate-300 hover:text-rose-500 transition-all p-1 hover:bg-rose-50 rounded-lg"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
       </div>
       
       <div className="px-4 pt-4 pb-2 shrink-0">
         <div className="flex justify-between items-start mb-3">
           <div className="flex flex-col">
-            <h2 className="text-[17px] font-black text-[#1e293b] tracking-tight mb-0.5">董仲良</h2>
+            <h2 className="text-[17px] text-[#1e293b] tracking-tight mb-0.5 font-normal">董仲良</h2>
             <div className="flex items-center space-x-2">
-               <span className="text-primary text-[12px] font-bold opacity-80 tracking-widest">ID: 325</span>
+               <span className="text-primary text-[12px] opacity-80 tracking-widest font-normal">ID: 325</span>
                <div className="w-1 h-1 bg-slate-200 rounded-full"></div>
-               <span className="text-emerald-500 text-[12px] font-black uppercase tracking-tight">On duty</span>
+               <span className="text-emerald-500 text-[12px] uppercase tracking-tight font-normal">在岗</span>
             </div>
           </div>
           <img src={person.image} className="w-11 h-11 rounded-xl border-2 border-white shadow-lg object-cover" />
@@ -90,12 +361,12 @@ const PersonnelPopup: React.FC<{
         
         <div className="flex bg-slate-50 p-1 rounded-xl mb-1 border border-slate-100 shrink-0">
           {['实时', '计划', '历史'].map((tab) => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-1.5 text-[12px] font-black rounded-lg transition-all ${activeTab === tab ? 'bg-white text-primary shadow-sm' : 'text-slate-400'}`}>{tab}</button>
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-1.5 text-[12px] rounded-lg transition-all font-normal ${activeTab === tab ? 'bg-white text-primary shadow-sm' : 'text-slate-400'}`}>{tab}</button>
           ))}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-4">
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-2">
         {activeTab === '实时' && (
           <div className="animate-in fade-in duration-300 space-y-1">
             <InfoRow label="职位" value="管网安检员" />
@@ -105,11 +376,47 @@ const PersonnelPopup: React.FC<{
             <InfoRow label="位置" value="天津市滨海新区泰达大街" />
             <InfoRow label="状态" value="巡检中 (正常)" />
             <InfoRow label="上班" value="2025-05-22 08:30:12" />
-            <InfoRow label="下班" value="2025-05-22 17:30:00" />
-            <InfoRow label="同步" value="2025-05-22 11:20:45" />
-            <div className="flex items-center py-1 border-b border-slate-50 last:border-0">
-              <span className="text-[#94a3b8] font-bold shrink-0 w-[60px] text-[12px]">角色</span>
-              <span className="text-primary font-black truncate flex-1 pl-2 text-[12px]">巡检组长</span>
+            <div className="flex items-center py-1 border-b border-slate-50 last:border-0 mb-4">
+              <span className="text-[#94a3b8] shrink-0 w-[60px] text-[12px] font-normal">角色</span>
+              <span className="text-primary truncate flex-1 pl-2 text-[12px] font-normal">巡检组长</span>
+            </div>
+            
+            {/* 任务进度区域 - 现在整合进滚动列表 */}
+            <div className="flex flex-col space-y-3 pt-4 border-t border-slate-100/60">
+              <div className="flex items-center justify-between">
+                {/* 左侧标签 */}
+                <span className="text-[12px] text-[#94a3b8] font-normal">任务进度</span>
+                
+                {/* 中间和右侧状态组 */}
+                <div className="flex items-center">
+                  <div className="flex items-center space-x-4">
+                    {/* 电池百分比 */}
+                    <div className="flex items-center space-x-1.5">
+                      <svg className={`w-3.5 h-3.5 ${person.battery < 20 ? 'text-[#f43f5e]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                        <rect x="2" y="7" width="16" height="10" rx="1.5" />
+                        <path d="M20 10v4" />
+                      </svg>
+                      <span className="text-[12px] text-slate-500 font-normal">{person.battery}%</span>
+                    </div>
+                    
+                    {/* GPS 状态 */}
+                    <div className="flex items-center space-x-1.5">
+                      <div className={`w-1.5 h-1.5 rounded-full ${statusDotColor}`}></div>
+                      <span className="text-[12px] text-slate-500 font-normal">GPS: {getGpsStatus()}</span>
+                    </div>
+                  </div>
+
+                  {/* 右侧大百分比和分割线 */}
+                  <div className="flex items-center pl-4 ml-4 border-l border-slate-100 h-4">
+                    <span className="text-[13px] text-primary font-bold">{person.progress}%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 进度条 */}
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-primary transition-all duration-1000 ease-out rounded-full" style={{ width: `${person.progress}%` }}></div>
+              </div>
             </div>
           </div>
         )}
@@ -118,54 +425,30 @@ const PersonnelPopup: React.FC<{
           <div className="space-y-0 divide-y divide-slate-100 animate-in fade-in duration-300">
             {historyData.map((item, index) => (
               <div key={index} className="py-3 first:pt-1 last:pb-0">
-                <div className="text-[12px] font-black text-slate-600 mb-1">{item.time}</div>
-                <div className="text-[12px] font-medium text-slate-400 leading-relaxed">{item.desc}</div>
+                <div className="text-[12px] text-slate-600 mb-1 font-normal">{item.time}</div>
+                <div className="text-[12px] text-slate-400 leading-relaxed font-normal">{item.desc}</div>
               </div>
             ))}
           </div>
         )}
 
         {activeTab === '计划' && (
-          <div className="flex flex-col items-center justify-center h-full text-slate-300 space-y-2 opacity-60 animate-in fade-in duration-300 min-h-[150px]">
-             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-             <span className="text-[12px] font-bold">暂无今日排班计划</span>
+          <div className="flex flex-col items-center justify-center text-slate-300 space-y-2 opacity-60 animate-in fade-in duration-300 py-10">
+             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 022 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+             <span className="text-[12px] font-normal">暂无今日排班计划</span>
           </div>
         )}
       </div>
-      
-      {activeTab === '实时' && (
-        <div className="border-t border-slate-50 px-5 py-4 flex flex-col bg-[#fcfdfe] rounded-b-2xl shrink-0 animate-in slide-in-from-bottom-2 duration-300">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[12px] font-black text-[#94a3b8] uppercase tracking-[0.05em]">PROGRESS</span>
-            <div className="flex items-center">
-               <div className="flex items-center space-x-3 pr-3">
-                  <div className="flex items-center">
-                    <svg className={`w-3 h-3 ${person.battery < 20 ? 'text-[#f43f5e]' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                      <rect x="2" y="7" width="16" height="10" rx="1.5" />
-                      <path d="M20 10v4" />
-                    </svg>
-                    <span className="text-[12px] font-black ml-1 text-slate-500">{person.battery}%</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className={`w-1.5 h-1.5 rounded-full ${statusDotColor}`}></div>
-                    <span className="text-[12px] font-black ml-1 text-slate-500">GPS: {getGpsStatus()}</span>
-                  </div>
-               </div>
-               <div className="flex items-center space-x-3 border-l border-slate-100 pl-3">
-                 <span className="text-[12px] font-black text-primary">{person.progress}%</span>
-               </div>
-            </div>
-          </div>
-          <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-primary transition-all duration-1000 ease-out rounded-full" style={{ width: `${person.progress}%` }}></div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
-export const MapArea: React.FC = () => {
+export const MapArea: React.FC<{
+  selectedTaskDetail?: any;
+  onTaskClose?: () => void;
+  allTasksViewData?: any; // 新增属性
+  onAllTasksClose?: () => void; // 新增属性
+}> = ({ selectedTaskDetail, onTaskClose, allTasksViewData, onAllTasksClose }) => {
   const mapRef = useRef<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<any[]>([]);
@@ -199,7 +482,7 @@ export const MapArea: React.FC = () => {
       isOpen: true,
       checked: true,
       items: [
-        { id: 'pipe', label: '管线', checked: true, icon: <svg className="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M4 12c4-4 8-4 12 0s8 4 12 0" transform="scale(0.8)"/></svg> },
+        { id: 'pipe', label: '管线', checked: true, icon: <svg className="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12c4-4 8-4 12 0s8 4 12 0" transform="scale(0.8)"/></svg> },
         { id: 'valve', label: '阀门', checked: true, icon: <svg className="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l-4 4h8l-4-4zm0 20l4-4H8l4 4zM4 12l4-4v8l-4-4zm16 0l-4 4V8l4 4z"/></svg> },
       ]
     }
@@ -319,6 +602,16 @@ export const MapArea: React.FC = () => {
     <div className="w-full h-full relative overflow-hidden bg-slate-50">
       <div ref={mapContainerRef} className="w-full h-full z-0 transition-all duration-500 ease-in-out"></div>
       
+      {/* 任务详情弹窗 */}
+      {selectedTaskDetail && (
+        <TaskDetailPopup task={selectedTaskDetail} onClose={() => onTaskClose?.()} />
+      )}
+
+      {/* “查看全部”任务列表弹窗 */}
+      {allTasksViewData && (
+        <AllTasksPopup data={allTasksViewData} onClose={() => onAllTasksClose?.()} />
+      )}
+
       {selectedPersonnel && (
         <PersonnelPopup 
           person={selectedPersonnel} 
@@ -340,7 +633,7 @@ export const MapArea: React.FC = () => {
                 <div className="flex items-center group/title relative">
                   <button onClick={() => toggleGroupFold(group.id)} className="w-4 h-4 border border-slate-300 bg-white flex items-center justify-center text-[12px] text-slate-400 hover:text-slate-600 transition-colors mr-1.5 relative z-10">{group.isOpen ? '-' : '+'}</button>
                   <div onClick={() => handleGroupCheck(group.id)} className={`w-4 h-4 rounded border transition-colors flex items-center justify-center cursor-pointer mr-3 ${group.checked ? 'bg-[#3b82f6] border-[#3b82f6] text-white' : 'bg-white border-slate-300 hover:border-[#3b82f6]'}`}><svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><polyline points="20 6 9 17 4 12"/></svg></div>
-                  <span className="text-[12px] font-bold text-slate-700 tracking-tight">{group.label}</span>
+                  <span className="text-[12px] text-slate-700 tracking-tight font-normal">{group.label}</span>
                 </div>
                 {group.isOpen && (
                   <div className="relative ml-2 pt-1">
@@ -348,10 +641,10 @@ export const MapArea: React.FC = () => {
                     {group.items.map((item) => (
                       <div key={item.id} className="relative flex items-center py-1.5 pl-6">
                         <div className="absolute left-[7px] top-1/2 -translate-y-1/2 w-4 h-px border-t border-dashed border-slate-300"></div>
-                        <div onClick={() => handleItemCheck(group.id, item.id)} className={`w-4 h-4 rounded border flex items-center justify-center cursor-pointer mr-3 shrink-0 ${item.checked ? 'bg-[#3b82f6] border-[#3b82f6] text-white' : 'bg-white border-slate-300'}`}><svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><polyline points="20 6 9 17 4 12"/></svg></div>
+                        <div onClick={() => handleItemCheck(group.id, item.id)} className={`w-4 h-4 rounded border flex items-center justify-center cursor-pointer mr-3 shrink-0 ${item.checked ? 'bg-[#3b82f6] border-[#3b82f6] text-white' : 'bg-white border-slate-300'}`}><svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></div>
                         <div className="flex items-center space-x-2.5 overflow-hidden">
                           <div className="w-4 h-4 flex items-center justify-center shrink-0">{item.icon}</div>
-                          <span className={`text-[12px] font-medium transition-colors truncate ${item.checked ? 'text-slate-700' : 'text-slate-400'}`}>{item.label}</span>
+                          <span className={`text-[12px] transition-colors truncate font-normal ${item.checked ? 'text-slate-700' : 'text-slate-400'}`}>{item.label}</span>
                         </div>
                       </div>
                     ))}
@@ -369,23 +662,23 @@ export const MapArea: React.FC = () => {
         <MapControlButton label="测量" isActive={activeTool === 'measure'} onClick={() => setActiveTool(activeTool === 'measure' ? null : 'measure')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.3 4.7a3.1 3.1 0 0 1 0 4.3L8.7 21.6a3.1 3.1 0 0 1-4.3 0L2.4 19.6a3.1 3.1 0 0 1 0-4.3L15.1 2.7a3.1 3.1 0 0 1 4.3 0l1.9 2z" /><path d="M7.5 10.5l2 2M10.5 7.5l2 2M13.5 4.5l2 2" /></svg>}>
           <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 flex flex-row items-center bg-white rounded-lg shadow-xl border border-slate-100 p-1.5 animate-in fade-in slide-in-from-left-3 duration-300 whitespace-nowrap">
             {['测距', '面积', '角度'].map((tool) => (
-              <button key={tool} onClick={(e) => { e.stopPropagation(); }} className="px-4 py-2 rounded-md text-[12px] font-bold text-slate-500 hover:bg-primary/10 hover:text-primary transition-all">{tool}</button>
+              <button key={tool} onClick={(e) => { e.stopPropagation(); }} className="px-4 py-2 rounded-md text-[12px] text-slate-500 hover:bg-primary/10 hover:text-primary transition-all font-normal">{tool}</button>
             ))}
           </div>
         </MapControlButton>
         <MapControlButton label="统计" isActive={activeTool === 'stats'} onClick={() => setActiveTool(activeTool === 'stats' ? null : 'stats')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeWidth="2"/></svg>}>
           <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 flex flex-row items-center bg-white rounded-lg shadow-xl border border-slate-100 p-1.5 animate-in fade-in slide-in-from-left-3 duration-300 whitespace-nowrap">
             {['绘图', '计算', '清除'].map((tool) => (
-              <button key={tool} onClick={(e) => { e.stopPropagation(); }} className="px-4 py-2 rounded-md text-[12px] font-bold text-slate-500 hover:bg-primary/10 hover:text-primary transition-all">{tool}</button>
+              <button key={tool} onClick={(e) => { e.stopPropagation(); }} className="px-4 py-2 rounded-md text-[12px] text-slate-500 hover:bg-primary/10 hover:text-primary transition-all font-normal">{tool}</button>
             ))}
           </div>
         </MapControlButton>
-        <MapControlButton label="要素识别" isActive={activeTool === 'identify'} onClick={() => setActiveTool(activeTool === 'identify' ? null : 'identify')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9V6a2 2 0 012-2h3M15 4h3a2 2 0 012 2v3M20 15v3a2 2 0 01-2 2h-3M9 20H6a2 2 0 01-2-2v-3" /><path d="M7 12h10" /></svg>} />
+        <MapControlButton label="要素识别" isActive={activeTool === 'identify'} onClick={() => setActiveTool(activeTool === 'identify' ? null : 'identify')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" /><path d="M13 13l6 6" /></svg>} />
         <MapControlButton label="全屏" isActive={isFullscreen} onClick={handleFullscreen} icon={isFullscreen ? (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 14h6v6M20 10h-6V4M14 20v-6h6M10 4v6H4" /></svg>) : (<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 3h6v6M9 21H3v-6M21 15v6h-6M3 9V3h6" /></svg>)} />
         <MapControlButton label="地图" isActive={activeTool === 'mapType'} onClick={() => setActiveTool(activeTool === 'mapType' ? null : 'mapType')} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" strokeWidth="2"/></svg>} >
           <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 flex flex-row items-center bg-white rounded-lg shadow-xl border border-slate-100 p-1.5 animate-in fade-in slide-in-from-left-3 duration-300 whitespace-nowrap">
             {[{ id: 'vec', label: '道路图' }, { id: 'sat', label: '卫星图' }, { id: 'white', label: '白板' }].map((sub) => (
-              <button key={sub.id} onClick={(e) => { e.stopPropagation(); setMapType(sub.id); }} className={`px-4 py-2 rounded-md text-[12px] font-bold transition-all ${mapType === sub.id ? 'bg-primary/10 text-primary' : 'text-slate-500 hover:bg-slate-50'}`}>{sub.label}</button>
+              <button key={sub.id} onClick={(e) => { e.stopPropagation(); setMapType(sub.id); }} className={`px-4 py-2 rounded-md text-[12px] transition-all font-normal ${mapType === sub.id ? 'bg-primary/10 text-primary' : 'text-slate-500 hover:bg-slate-50'}`}>{sub.label}</button>
             ))}
           </div>
         </MapControlButton>

@@ -7,14 +7,61 @@ import { InspectionPanel } from './components/InspectionPanel.tsx';
 import { SiteManagementContent } from './components/SiteManagementContent.tsx';
 import { NavigationTab } from './types.ts';
 
+// 集中管理页签元数据，确保图标一致性
+const TAB_METADATA: Record<string, { label: string; icon: React.ReactNode }> = {
+  [NavigationTab.RealTime]: {
+    label: '实时监控中心',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+      </svg>
+    )
+  },
+  [NavigationTab.TerminalStatus]: {
+    label: '终端在线状态',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+        <path d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+      </svg>
+    )
+  },
+  [NavigationTab.TrajectoryAnalysis]: {
+    label: '人员轨迹分析',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+        <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+      </svg>
+    )
+  },
+  [NavigationTab.SiteManagement]: {
+    label: '工地管理',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+        <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5"/>
+      </svg>
+    )
+  },
+  [NavigationTab.SiteReports]: {
+    label: '工地数据报表',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+        <path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+    )
+  }
+};
+
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavigationTab>(NavigationTab.RealTime);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [isTabDropdownOpen, setIsTabDropdownOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [selectedTaskDetail, setSelectedTaskDetail] = useState<any>(null);
+  const [allTasksViewData, setAllTasksViewData] = useState<any>(null); // 新增状态
+  
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // 监听全屏变化
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -23,30 +70,23 @@ const App: React.FC = () => {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // 初始页签仅保留实时监控中心
   const [openTabs, setOpenTabs] = useState([
-    { id: NavigationTab.RealTime, label: '实时监控中心', icon: (
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-    )}
+    { 
+      id: NavigationTab.RealTime, 
+      label: TAB_METADATA[NavigationTab.RealTime].label, 
+      icon: TAB_METADATA[NavigationTab.RealTime].icon 
+    }
   ]);
 
   const getLabel = (tabId: NavigationTab) => {
     return openTabs.find(t => t.id === tabId)?.label || '工作台';
   };
 
-  // 关闭页签处理逻辑
   const handleCloseTab = (tabId: NavigationTab, e: React.MouseEvent) => {
-    e.stopPropagation(); // 阻止冒泡，防止触发页签切换
-    
-    // 如果只有一个页签，通常不允许全部关闭
+    e.stopPropagation(); 
     if (openTabs.length <= 1) return;
-
     const newTabs = openTabs.filter(tab => tab.id !== tabId);
     setOpenTabs(newTabs);
-
-    // 如果关闭的是当前选中的页签，则需要激活另一个页签
     if (activeTab === tabId) {
       const closedIndex = openTabs.findIndex(tab => tab.id === tabId);
       const nextActiveTab = newTabs[closedIndex - 1] || newTabs[0];
@@ -56,7 +96,6 @@ const App: React.FC = () => {
     }
   };
 
-  // 点击外部关闭下拉框
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -69,34 +108,25 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-[#f1f3f6] overflow-hidden font-sans">
-      {/* 侧边栏 - 全屏时隐藏 */}
       {!isFullscreen && (
         <Sidebar activeTab={activeTab} onTabChange={(tabId) => {
-          // 查找是否已在打开的页签中
           const isAlreadyOpen = openTabs.some(t => t.id === tabId);
           if (!isAlreadyOpen) {
-            const labels: Record<string, string> = {
-              [NavigationTab.RealTime]: '实时监控中心',
-              [NavigationTab.TerminalStatus]: '手持终端状态',
-              [NavigationTab.TrajectoryAnalysis]: '人员轨迹分析',
-              [NavigationTab.SiteManagement]: '工地管理',
-              [NavigationTab.SiteReports]: '工地查询报表',
+            const metadata = TAB_METADATA[tabId] || { 
+              label: '新模块', 
+              icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2" /></svg> 
             };
-            setOpenTabs([...openTabs, { id: tabId, label: labels[tabId] || '新模块', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2" /></svg> }]);
+            setOpenTabs([...openTabs, { id: tabId, ...metadata }]);
           }
           setActiveTab(tabId);
         }} />
       )}
 
-      {/* 右侧主容器 */}
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 gap-1.5 overflow-hidden ${isFullscreen ? 'p-0' : 'py-2 pr-2.5 pl-2.5'}`}>
-        {/* 顶部栏 - 全屏时隐藏 */}
         {!isFullscreen && <Header />}
 
-        {/* 核心内容容器 */}
         <div className={`flex-1 flex flex-col bg-white border border-slate-200/50 overflow-hidden relative transition-all duration-300 ${isFullscreen ? 'rounded-none border-none' : 'rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]'}`}>
           
-          {/* 标签切换栏 - 全屏时隐藏 */}
           {!isFullscreen && (
             <div className="h-12 border-b border-slate-100 flex items-center justify-between px-4 bg-[#fcfdfe] shrink-0">
               <div className="flex items-center h-full">
@@ -185,18 +215,22 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {/* 内容区 */}
           <div className="flex-1 flex overflow-hidden">
             <main className="flex-1 relative bg-white">
               {activeTab === NavigationTab.RealTime ? (
-                <MapArea />
+                <MapArea 
+                  selectedTaskDetail={selectedTaskDetail} 
+                  onTaskClose={() => setSelectedTaskDetail(null)} 
+                  allTasksViewData={allTasksViewData} // 传递数据
+                  onAllTasksClose={() => setAllTasksViewData(null)} // 传递关闭回调
+                />
               ) : activeTab === NavigationTab.SiteManagement ? (
                 <SiteManagementContent />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50/40">
                   <div className="p-10 bg-white rounded-3xl shadow-xl border border-slate-100 flex flex-col items-center max-w-sm text-center">
                     <div className="w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mb-6 text-primary/40">
-                      {openTabs.find(t => t.id === activeTab)?.icon}
+                      {TAB_METADATA[activeTab]?.icon || <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2" /></svg>}
                     </div>
                     <h3 className="text-slate-800 font-black text-lg mb-2 tracking-tight">{getLabel(activeTab)}</h3>
                     <p className="text-[12px] text-slate-400 leading-relaxed font-medium">模块数据正由运维中心同步至云端，请稍后刷新查看。</p>
@@ -213,7 +247,12 @@ const App: React.FC = () => {
                     : 'w-16 shadow-none'
                 }`}
               >
-                <InspectionPanel isOpen={isPanelOpen} onToggle={() => setIsPanelOpen(!isPanelOpen)} />
+                <InspectionPanel 
+                  isOpen={isPanelOpen} 
+                  onToggle={() => setIsPanelOpen(!isPanelOpen)} 
+                  onTaskClick={(task) => setSelectedTaskDetail(task)} 
+                  onViewAllTasks={(data) => setAllTasksViewData(data)} // 传递回调
+                />
               </aside>
             )}
           </div>

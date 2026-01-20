@@ -5,6 +5,8 @@ import { MOCK_PERSONNEL, MOCK_VEHICLES } from '../constants.tsx';
 interface InspectionPanelProps {
   isOpen: boolean;
   onToggle: () => void;
+  onTaskClick?: (task: any) => void;
+  onViewAllTasks?: (data: any) => void;
 }
 
 type SubTab = 'personnel' | 'vehicle' | 'drone' | 'hazard' | 'alarm' | 'site' | 'droneLeak' | 'vehicleLeak';
@@ -32,10 +34,10 @@ interface LogRecord {
   time: string;
 }
 
-// 专业的四旋翼无人机图标路径
-const DRONE_PATH = "M12 11c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z M12 6V2 M12 22v-4 M2 12h4 M22 12h-4 M4 4l3 3 M17 17l3 3 M4 20l3-3 M17 7l3-3";
+// 优化后的四旋翼无人机图标路径：中心圆 + 对角支架 + 旋翼小圆
+const DRONE_PATH = "M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4z M5 5l4 4 M15 15l4 4 M5 19l4-4 M15 9l4-4 M5 5m-2 0a2 2 0 1 0 4 0 2 2 0 1 0-4 0 M19 5m-2 0a2 2 0 1 0 4 0 2 2 0 1 0-4 0 M5 19m-2 0a2 2 0 1 0 4 0 2 2 0 1 0-4 0 M19 19m-2 0a2 2 0 1 0 4 0 2 2 0 1 0-4 0";
 
-export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onToggle }) => {
+export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onToggle, onTaskClick, onViewAllTasks }) => {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('personnel');
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>('trajectory');
@@ -49,7 +51,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
   const filterRef = useRef<HTMLDivElement>(null);
   
   // 任务计划折叠状态
-  const [isTaskPlanExpanded, setIsTaskPlanExpanded] = useState(false);
+  const [isTaskPlanExpanded, setIsTaskPlanExpanded] = useState(true); // 默认展开以便查看效果
   
   // 轨迹操作按钮选中状态
   const [selectedTrajectoryAction, setSelectedTrajectoryAction] = useState<string | null>(null);
@@ -237,7 +239,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
   const toggleExpand = (id: string) => {
     if (expandedItemId !== id) {
       setExpandedItemId(id);
-      setIsTaskPlanExpanded(false);
+      setIsTaskPlanExpanded(true);
     } else {
       setExpandedItemId(null);
     }
@@ -254,6 +256,9 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
     { id: 't2', address: '天津市滨海新区冯师傅纯碱馒头', time: '01/04 10:31', status: 'completed' },
     { id: 't3', address: '天津市滨海新区凯德米粉店（北区）', time: '01/05 09:20', status: 'pending' },
     { id: 't4', address: '天津市滨海新区万达广场商业街C区', time: '01/05 14:15', status: 'pending' },
+    { id: 't5', address: '天津市滨海新区凯德广场西门', time: '01/05 15:30', status: 'pending' },
+    { id: 't6', address: '天津市滨海新区泰达图书馆正门', time: '01/05 16:45', status: 'pending' },
+    { id: 't7', address: '天津市滨海新区MSD中心大厦', time: '01/05 17:20', status: 'pending' },
   ];
 
   const mockLogs: LogRecord[] = [
@@ -274,7 +279,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
           </svg>
         )}
       </div>
-      <span className="text-[12px] font-bold text-slate-600 group-hover:text-slate-800 transition-colors">{label}</span>
+      <span className="text-[12px] font-normal text-slate-600 group-hover:text-slate-800 transition-colors">{label}</span>
     </label>
   );
 
@@ -311,7 +316,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                     </svg>
                   </div>
                 </div>
-                <div className="flex items-center mt-1 text-[12px] text-slate-400 font-medium space-x-1.5">
+                <div className="flex items-center mt-1 text-[12px] text-slate-400 font-normal space-x-1.5">
                   <span>{item.role}</span>
                   <span className="text-slate-300">•</span>
                   <div className="flex items-center truncate">
@@ -325,9 +330,9 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
             </div>
             
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[12px] font-medium">
+              <div className="flex items-center justify-between text-[12px] font-normal">
                 <span className="text-slate-400">巡检任务完成度</span>
-                <span className="text-slate-800 font-bold">{item.progress}%</span>
+                <span className="text-slate-800 font-medium">{item.progress}%</span>
               </div>
               <div className="w-full h-[3px] bg-slate-100/50 rounded-full overflow-hidden">
                 <div 
@@ -344,7 +349,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                     <button
                       key={tab}
                       onClick={() => setActiveDetailTab(tab)}
-                      className={`px-4 py-1.5 text-xs font-bold transition-all relative ${
+                      className={`px-4 py-1.5 text-[12px] font-medium transition-all relative ${
                         activeDetailTab === tab ? 'text-[#9a6bff]' : 'text-slate-400 hover:text-slate-600'
                       }`}
                     >
@@ -362,21 +367,21 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   <div className="space-y-4">
                     <div className="bg-[#9a6bff]/5 rounded-2xl p-4 flex items-center justify-between border border-[#9a6bff]/10">
                       <div className="space-y-1">
-                        <span className="text-[12px] text-[#9a6bff]/60 font-bold uppercase tracking-wider">总公里数</span>
+                        <span className="text-[12px] text-[#9a6bff]/60 font-medium uppercase tracking-wider">总公里数</span>
                         <div className="flex items-baseline space-x-1">
-                          <span className="text-lg font-black text-[#9a6bff]">11.3</span>
-                          <span className="text-[12px] text-[#9a6bff] font-bold">km</span>
+                          <span className="text-lg font-bold text-[#9a6bff]">11.3</span>
+                          <span className="text-[12px] text-[#9a6bff] font-medium">km</span>
                         </div>
                       </div>
                       <div className="w-px h-8 bg-[#9a6bff]/10"></div>
                       <div className="space-y-1 text-right">
-                        <span className="text-[12px] text-[#9a6bff]/60 font-bold uppercase tracking-wider">总用时区间</span>
-                        <div className="text-sm font-black text-slate-700">08:30 - 12:00</div>
+                        <span className="text-[12px] text-[#9a6bff]/60 font-medium uppercase tracking-wider">总用时区间</span>
+                        <div className="text-[13px] font-medium text-slate-700">08:30 - 12:00</div>
                       </div>
                     </div>
                     <div className="pt-0.5">
                       <div className="flex items-center justify-between mb-3 px-1">
-                        <span className="text-[12px] font-black text-slate-300 uppercase tracking-[0.15em] select-none">轨迹明细片段</span>
+                        <span className="text-[12px] font-medium text-slate-300 uppercase tracking-[0.15em] select-none">轨迹明细片段</span>
                         <div className="flex items-center space-x-2">
                           <div className="relative">
                             <button 
@@ -414,12 +419,12 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                                 </div>
                                 <div className="flex items-center">
                                   <svg className="w-3.5 h-3.5 mr-2.5 text-slate-300 group-hover/line:text-[#9a6bff] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2"/></svg>
-                                  <span className={`text-[13px] font-medium ${isSelected ? 'text-slate-800' : 'text-slate-600'}`}>{traj.time}</span>
+                                  <span className={`text-[13px] font-normal ${isSelected ? 'text-slate-800' : 'text-slate-600'}`}>{traj.time}</span>
                                 </div>
                               </div>
                               <div className="flex items-center space-x-3">
-                                <span className={`px-2 py-0.5 rounded text-[12px] font-medium ${isSelected ? 'bg-[#7c4dff]/10 text-[#7c4dff]' : 'bg-slate-50 text-slate-400'}`}>{traj.dist}</span>
-                                <span className="text-[12px] text-slate-400 font-medium w-12 text-right">{traj.dur}</span>
+                                <span className={`px-2 py-0.5 rounded text-[12px] font-normal ${isSelected ? 'bg-[#7c4dff]/10 text-[#7c4dff]' : 'bg-slate-50 text-slate-400'}`}>{traj.dist}</span>
+                                <span className="text-[12px] text-slate-400 font-normal w-12 text-right">{traj.dur}</span>
                               </div>
                             </div>
                           );
@@ -432,7 +437,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                 {activeDetailTab === 'task' && (
                   <div className="space-y-3.5 pt-1.5 pb-3">
                     <div onClick={() => setIsTaskPlanExpanded(!isTaskPlanExpanded)} className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 p-2 -mx-2 rounded-lg transition-colors">
-                      <span className="text-[12px] font-bold text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
+                      <span className="text-[12px] font-normal text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
                         {activeSubTab === 'personnel' ? '用户安检' : '抢修作业'}-{item.name}{selectedDate ? selectedDate.replace(/-/g, '/') : '未选日期'}的计划
                       </span>
                       <svg className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isTaskPlanExpanded ? 'rotate-0' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7" strokeWidth="2"/></svg>
@@ -441,23 +446,32 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                       <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                         <div className="bg-[#fcfdfe] border border-slate-50 rounded-2xl p-4 flex items-center justify-between shadow-sm">
                           <div className="flex items-center space-x-6">
-                            <div className="flex flex-col"><span className="text-[12px] text-slate-400 font-bold mb-0.5">总计</span><span className="text-xl font-black text-slate-800">48</span></div>
-                            <div className="flex flex-col"><span className="text-[12px] text-[#10b981] font-bold mb-0.5">已完成</span><span className="text-xl font-black text-[#10b981]">32</span></div>
-                            <button className="px-4 py-1.5 bg-[#9a6bff]/5 text-[#9a6bff] rounded-full text-[12px] font-bold hover:bg-[#9a6bff]/10 transition-colors shadow-sm">查看全部</button>
+                            <div className="flex flex-col"><span className="text-[12px] text-slate-400 font-normal mb-0.5">总计</span><span className="text-xl font-bold text-slate-800">48</span></div>
+                            <div className="flex flex-col"><span className="text-[12px] text-[#10b981] font-normal mb-0.5">已完成</span><span className="text-xl font-bold text-[#10b981]">32</span></div>
+                            <button 
+                              onClick={() => onViewAllTasks?.({ name: item.name, tasks: mockTasks })}
+                              className="px-4 py-1.5 bg-[#9a6bff]/5 text-[#9a6bff] rounded-full text-[12px] font-normal hover:bg-[#9a6bff]/10 transition-colors shadow-sm"
+                            >
+                              查看全部
+                            </button>
                           </div>
                           <div className="relative w-10 h-10 flex items-center justify-center">
                             <svg className="w-full h-full transform -rotate-90"><circle cx="20" cy="20" r="16" stroke="currentColor" strokeWidth="3" fill="transparent" className="text-emerald-500/10"/><circle cx="20" cy="20" r="16" stroke="currentColor" strokeWidth="3" strokeDasharray={100.5} strokeDashoffset={100.5 * (1 - 0.66)} strokeLinecap="round" fill="transparent" className="text-emerald-500 transition-all duration-1000"/></svg>
-                            <span className="absolute text-[12px] font-black text-emerald-500">66%</span>
+                            <span className="absolute text-[12px] font-bold text-emerald-500">66%</span>
                           </div>
                         </div>
                         <div className="space-y-0 border-t border-slate-50 pt-2">
-                          {mockTasks.map((task) => (
-                            <div key={task.id} className="flex items-center justify-between py-2 group/task-item border-b border-slate-50/50 last:border-0 px-1">
+                          {mockTasks.slice(0, 4).map((task) => (
+                            <div 
+                              key={task.id} 
+                              className="flex items-center justify-between py-2 group/task-item border-b border-slate-50/50 last:border-0 px-1 cursor-pointer hover:bg-slate-50 rounded-md transition-colors"
+                              onClick={() => onTaskClick?.(task)}
+                            >
                               <div className="flex items-center space-x-3 overflow-hidden flex-1">
                                 <div className={`w-2 h-2 rounded-full shrink-0 ${task.status === 'completed' ? 'bg-[#10b981]' : 'bg-slate-300'}`}></div>
-                                <span title={task.address} className="text-[12px] font-bold text-slate-700 truncate group-hover/task-item:text-[#9a6bff] transition-colors">{task.address}</span>
+                                <span title={task.address} className="text-[12px] font-normal text-slate-700 truncate group-hover/task-item:text-[#9a6bff] transition-colors">{task.address}</span>
                               </div>
-                              <div className="shrink-0 ml-4"><span className="text-[12px] font-medium text-slate-400 font-mono">{task.time}</span></div>
+                              <div className="shrink-0 ml-4"><span className="text-[12px] font-normal text-slate-400 font-mono">{task.time}</span></div>
                             </div>
                           ))}
                         </div>
@@ -470,8 +484,8 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   <div className="space-y-0 pt-1 px-1">
                     {mockLogs.map((log) => (
                       <div key={log.id} className="flex items-center justify-between py-2.5 border-b border-slate-50 last:border-0 group/log-item">
-                        <span className="text-[12px] font-bold text-slate-600 group-hover/log-item:text-[#9a6bff] transition-colors">{log.title}</span>
-                        <span className="text-[12px] text-slate-400 font-medium font-mono">{log.time}</span>
+                        <span className="text-[12px] font-normal text-slate-600 group-hover/log-item:text-[#9a6bff] transition-colors">{log.title}</span>
+                        <span className="text-[12px] text-slate-400 font-normal font-mono">{log.time}</span>
                       </div>
                     ))}
                   </div>
@@ -506,7 +520,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
               <svg className="w-4 h-4 text-[#7c4dff] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" />
               </svg>
-              <span className="text-[13px] font-bold text-slate-700">{formatDisplayDate(selectedDate)}</span>
+              <span className="text-[13px] font-normal text-slate-700">{formatDisplayDate(selectedDate)}</span>
               <svg className={`w-3 h-3 text-slate-300 group-hover:text-[#7c4dff] transition-all ${isCalendarOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -534,24 +548,24 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                         className="flex items-center space-x-1.5 group cursor-pointer"
                         onClick={() => setPickerMode('year')}
                       >
-                        <span className="text-[14px] font-black text-slate-800 hover:text-[#3b82f6] transition-colors">
+                        <span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors">
                           {viewDate.getFullYear()}年
                         </span>
-                        <span className="text-[14px] font-black text-slate-800 hover:text-[#3b82f6] transition-colors" onClick={handleMonthPickerClick}>
+                        <span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors" onClick={handleMonthPickerClick}>
                           {String(viewDate.getMonth() + 1).padStart(2, '0')}月
                         </span>
                         <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg>
                       </div>
                     ) : pickerMode === 'month' ? (
                       <div className="flex items-center space-x-1.5 group cursor-pointer" onClick={() => setPickerMode('year')}>
-                        <span className="text-[14px] font-black text-slate-800 hover:text-[#3b82f6] transition-colors">
+                        <span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors">
                           {viewDate.getFullYear()}年
                         </span>
                         <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg>
                       </div>
                     ) : (
                       <div className="flex items-center space-x-1.5">
-                        <span className="text-[14px] font-black text-slate-800">
+                        <span className="text-[14px] font-bold text-slate-800">
                           {Math.floor(viewDate.getFullYear() / 10) * 10} - {Math.floor(viewDate.getFullYear() / 10) * 10 + 9}
                         </span>
                       </div>
@@ -571,7 +585,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   <>
                     <div className="grid grid-cols-7 mb-2 border-b border-slate-50 pb-2">
                       {['一', '二', '三', '四', '五', '六', '日'].map(w => (
-                        <span key={w} className="text-center text-[12px] font-bold text-slate-400">{w}</span>
+                        <span key={w} className="text-center text-[12px] font-normal text-slate-400">{w}</span>
                       ))}
                     </div>
                     <div className="grid grid-cols-7 gap-y-1">
@@ -583,7 +597,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                           <div 
                             key={idx}
                             onClick={() => handleDateSelect(day.date)}
-                            className={`aspect-square flex items-center justify-center text-[12px] font-bold rounded-lg cursor-pointer transition-all relative ${
+                            className={`aspect-square flex items-center justify-center text-[12px] font-normal rounded-lg cursor-pointer transition-all ${
                               day.isCurrentMonth ? 'text-slate-700' : 'text-slate-200'
                             } ${
                               isSelected ? 'bg-[#3b82f6] text-white shadow-[0_4px_12px_rgba(59,130,246,0.3)]' : 'hover:bg-slate-50'
@@ -607,7 +621,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                         <div 
                           key={m}
                           onClick={() => handleMonthSelect(idx)}
-                          className={`flex items-center justify-center py-2.5 rounded-xl text-[13px] font-black cursor-pointer transition-all ${
+                          className={`flex items-center justify-center py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all ${
                             isActive ? 'bg-[#3b82f6] text-white shadow-lg' : 'text-slate-600 hover:bg-slate-50 hover:text-[#3b82f6]'
                           }`}
                         >
@@ -627,7 +641,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                         <div 
                           key={y}
                           onClick={() => handleYearSelect(y)}
-                          className={`flex items-center justify-center py-2.5 rounded-xl text-[13px] font-black cursor-pointer transition-all ${
+                          className={`flex items-center justify-center py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all ${
                             isOutside ? 'text-slate-200' : isActive ? 'bg-[#3b82f6] text-white shadow-lg' : 'text-slate-600 hover:bg-slate-50 hover:text-[#3b82f6]'
                           }`}
                         >
@@ -641,13 +655,13 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                 <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-50">
                   <button 
                     onClick={handleClearClick}
-                    className="text-[12px] font-bold text-[#3b82f6] hover:underline px-1 transition-all"
+                    className="text-[12px] font-normal text-[#3b82f6] hover:underline px-1 transition-all"
                   >
                     清除
                   </button>
                   <button 
                     onClick={handleTodayClick}
-                    className="text-[12px] font-bold text-[#3b82f6] hover:underline px-1 transition-all"
+                    className="text-[12px] font-normal text-[#3b82f6] hover:underline px-1 transition-all"
                   >
                     今天
                   </button>
@@ -664,7 +678,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                 <input 
                   type="text" 
                   placeholder={activeSubTab === 'personnel' ? "搜索人员..." : "搜索车辆..."}
-                  className="w-full h-10 pl-10 pr-4 bg-slate-50/50 border border-slate-100 rounded-lg text-xs focus:ring-2 focus:ring-[#9a6bff]/20 focus:border-[#9a6bff] outline-none transition-all placeholder:text-slate-400"
+                  className="w-full h-10 pl-10 pr-4 bg-slate-50/50 border border-slate-100 rounded-lg text-[12px] font-normal focus:ring-2 focus:ring-[#9a6bff]/20 focus:border-[#9a6bff] outline-none transition-all placeholder:text-slate-400"
                 />
                 <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -686,7 +700,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                 {isFilterOpen && (
                   <div className="absolute top-full right-0 mt-2 w-[280px] bg-white border border-slate-100 rounded-xl shadow-[0_10px_30px_-5px_rgba(0,0,0,0.15)] p-4 space-y-4 z-50 transition-all duration-200 transform origin-top-right scale-100 opacity-100">
                     <div className="flex items-start space-x-4">
-                      <span className="text-[12px] font-bold text-slate-400 shrink-0 pt-0.5">状态:</span>
+                      <span className="text-[12px] font-normal text-slate-400 shrink-0 pt-0.5">状态:</span>
                       <div className="flex flex-wrap gap-x-4 gap-y-2.5 flex-1">
                         <FilterCheckbox label="全部" />
                         <FilterCheckbox label="下班" />
@@ -699,7 +713,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">
-                      <span className="text-[12px] font-bold text-slate-400 shrink-0">类型:</span>
+                      <span className="text-[12px] font-normal text-slate-400 shrink-0">类型:</span>
                       <div className="flex flex-wrap gap-x-4 gap-y-2.5 flex-1">
                         <FilterCheckbox label="全部" />
                       </div>
@@ -722,7 +736,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   <svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
                   </svg>
-                  <span className={`text-[12px] font-bold transition-colors ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-600 group-hover:text-slate-800'}`}>按部门</span>
+                  <span className={`text-[12px] font-normal transition-colors ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-600 group-hover:text-slate-800'}`}>按部门</span>
                 </div>
                 <div className={`transition-all duration-300 ${sortField === 'department' && sortOrder === 'desc' ? 'rotate-180' : ''}`}>
                   <svg className={`w-3 h-3 ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-300 group-hover:text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -743,7 +757,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   <svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
                   </svg>
-                  <span className={`text-[12px] font-bold transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-600 group-hover:text-slate-800'}`}>按状态</span>
+                  <span className={`text-[12px] font-normal transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-600 group-hover:text-slate-800'}`}>按状态</span>
                 </div>
                 <div className={`transition-all duration-300 ${sortField === 'status' && sortOrder === 'desc' ? 'rotate-180' : ''}`}>
                   <svg className={`w-3 h-3 ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-300 group-hover:text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
