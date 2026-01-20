@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MOCK_PERSONNEL, MOCK_VEHICLES } from '../constants.tsx';
+import { MOCK_PERSONNEL, MOCK_VEHICLES } from '../../constants.tsx';
 
 interface InspectionPanelProps {
   isOpen: boolean;
@@ -383,7 +383,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                     </div>
                     <div className="pt-0.5">
                       <div className="flex items-center justify-between mb-3 px-1">
-                        <span className="text-[12px] font-medium text-slate-300 uppercase tracking-[0.15em] select-none">轨迹明细片段</span>
+                        <span className="text-[12px] font-normal text-slate-600 uppercase tracking-[0.15em] select-none">轨迹明细片段</span>
                         <div className="flex items-center space-x-2">
                           <div className="relative">
                             <button 

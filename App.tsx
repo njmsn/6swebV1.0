@@ -1,13 +1,11 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar.tsx';
 import { Header } from './components/Header.tsx';
-import { MapArea } from './components/MapArea.tsx';
-import { InspectionPanel } from './components/InspectionPanel.tsx';
-import { SiteManagementContent } from './components/SiteManagementContent.tsx';
+import { MapArea } from './components/realTime/MapArea.tsx';
+import { InspectionPanel } from './components/realTime/InspectionPanel.tsx';
+import { SiteManagementContent } from './components/dataMain/SiteManagementContent.tsx';
 import { NavigationTab } from './types.ts';
 
-// 集中管理页签元数据，确保图标一致性
 const TAB_METADATA: Record<string, { label: string; icon: React.ReactNode }> = {
   [NavigationTab.RealTime]: {
     label: '实时监控中心',
@@ -58,7 +56,9 @@ const App: React.FC = () => {
   const [isTabDropdownOpen, setIsTabDropdownOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedTaskDetail, setSelectedTaskDetail] = useState<any>(null);
-  const [allTasksViewData, setAllTasksViewData] = useState<any>(null); // 新增状态
+  const [allTasksViewData, setAllTasksViewData] = useState<any>(null);
+  
+  const [playbackState, setPlaybackState] = useState<{ isOpen: boolean; trajectoryId?: string } | null>(null);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -149,7 +149,7 @@ const App: React.FC = () => {
                         onClick={(e) => handleCloseTab(tab.id, e)}
                         className={`ml-3 p-0.5 hover:bg-slate-100 rounded-full transition-opacity ${activeTab === tab.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'}`}
                       >
-                        <svg className="w-3 h-3 text-slate-300 hover:text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3.3 h-3.3 text-slate-300 hover:text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
@@ -221,8 +221,10 @@ const App: React.FC = () => {
                 <MapArea 
                   selectedTaskDetail={selectedTaskDetail} 
                   onTaskClose={() => setSelectedTaskDetail(null)} 
-                  allTasksViewData={allTasksViewData} // 传递数据
-                  onAllTasksClose={() => setAllTasksViewData(null)} // 传递关闭回调
+                  allTasksViewData={allTasksViewData}
+                  onAllTasksClose={() => setAllTasksViewData(null)}
+                  playbackState={playbackState}
+                  onPlaybackClose={() => setPlaybackState(null)}
                 />
               ) : activeTab === NavigationTab.SiteManagement ? (
                 <SiteManagementContent />
@@ -251,7 +253,8 @@ const App: React.FC = () => {
                   isOpen={isPanelOpen} 
                   onToggle={() => setIsPanelOpen(!isPanelOpen)} 
                   onTaskClick={(task) => setSelectedTaskDetail(task)} 
-                  onViewAllTasks={(data) => setAllTasksViewData(data)} // 传递回调
+                  onViewAllTasks={(data) => setAllTasksViewData(data)}
+                  onPlaybackToggle={(isOpen, trajId) => setPlaybackState(isOpen ? { isOpen, trajectoryId: trajId } : null)}
                 />
               </aside>
             )}

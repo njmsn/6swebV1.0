@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MOCK_MAP_POINTS } from '../constants.tsx';
+import { MOCK_MAP_POINTS } from '../../constants.tsx';
 
 declare const L: any;
 
@@ -45,7 +45,7 @@ const PlaybackControl: React.FC<{
   }, [isPlaying, speed, isDragging]);
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProgress(parseInt(e.target.value));
+    setProgress(parseFloat(e.target.value));
   };
 
   const reset = () => {
@@ -58,12 +58,10 @@ const PlaybackControl: React.FC<{
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-6 duration-500 ease-out">
       <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] px-6 py-4 flex items-center space-x-6 w-[700px]">
-        {/* 关闭按钮 */}
         <button onClick={onClose} className="absolute -top-3 -right-3 w-8 h-8 bg-white border border-slate-100 rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
 
-        {/* 播放暂停 */}
         <button 
           onClick={() => setIsPlaying(!isPlaying)}
           className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-90 ${isPlaying ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-primary text-white shadow-lg shadow-primary/30'}`}
@@ -75,11 +73,10 @@ const PlaybackControl: React.FC<{
           )}
         </button>
 
-        {/* 进度控制 */}
         <div className="flex-1 flex flex-col space-y-2">
           <div className="flex justify-between items-center px-1">
-            <span className="text-[12px] font-bold text-slate-700">人员轨迹回放明细</span>
-            <span className="text-[11px] font-mono text-slate-400 font-bold tracking-tighter">{Math.floor(progress)}%</span>
+            <span className="text-[12px] font-normal text-slate-700">人员轨迹回放明细</span>
+            <span className="text-[11px] font-mono text-slate-400 font-normal tracking-tighter">{Math.floor(progress)}%</span>
           </div>
           <div className="relative h-2 group">
             <input 
@@ -99,14 +96,13 @@ const PlaybackControl: React.FC<{
           </div>
         </div>
 
-        {/* 倍速与重置 */}
         <div className="flex items-center space-x-3">
           <div className="flex items-center bg-slate-50 border border-slate-100 rounded-lg p-0.5">
             {[0.5, 1, 2, 4].map(s => (
               <button 
                 key={s} 
                 onClick={() => setSpeed(s)}
-                className={`px-2.5 py-1 text-[11px] font-black rounded-md transition-all ${speed === s ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`px-2.5 py-1 text-[11px] font-normal rounded-md transition-all ${speed === s ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 {s}x
               </button>
@@ -121,7 +117,312 @@ const PlaybackControl: React.FC<{
   );
 };
 
-interface MapAreaProps {
+// 辅助组件：信息展示行 ( py-0.5 极致压缩)
+const InfoRow = ({ label, value, isBoldValue = false }: { label: string, value?: string, isBoldValue?: boolean }) => (
+  <div className="flex items-start py-0.5 border-b border-slate-50/50 last:border-0">
+    <span className="text-[#94a3b8] shrink-0 w-[90px] text-[13px] font-normal leading-relaxed">{label}</span>
+    <span className={`text-[#334155] text-[13px] leading-relaxed flex-1 break-all ${isBoldValue ? 'font-medium' : 'font-normal'}`}>
+      {value || '--'}
+    </span>
+  </div>
+);
+
+// 辅助组件：弹窗头部 ( h-11 压缩)
+const PopupHeader = ({ title, onClose }: { title: string, onClose: () => void }) => (
+  <div className="h-11 px-5 flex items-center justify-between border-b border-slate-50 shrink-0 bg-white rounded-t-2xl">
+    <div className="flex items-center space-x-2.5">
+      <div className="w-1.5 h-4 bg-primary rounded-full shadow-[0_0_8px_rgba(154,107,255,0.4)]"></div>
+      <span className="text-[14px] font-normal text-slate-700 tracking-tight">{title}</span>
+    </div>
+    <button onClick={onClose} className="text-slate-300 hover:text-rose-500 p-1.5 rounded-xl transition-all hover:bg-rose-50">
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth="2.5" /></svg>
+    </button>
+  </div>
+);
+
+const PersonnelPopup: React.FC<{ person: any; position: { x: number, y: number }; onClose: () => void; }> = ({ person, position, onClose }) => {
+  const [activeTab, setActiveTab] = useState('实时');
+  
+  return (
+    <div className="absolute bg-white rounded-2xl shadow-[0_35px_80px_-15px_rgba(0,0,0,0.3)] border border-slate-100 z-[1000] overflow-visible flex flex-col animate-in zoom-in-95 fade-in duration-500 ease-out"
+      style={{ 
+        width: '330px', 
+        height: '480px', 
+        left: `${position.x}px`, 
+        top: `${position.y - 28}px`, 
+        transform: 'translate(-50%, -100%)' 
+      }}>
+      
+      {/* 气泡三角 */}
+      <div className="absolute bottom-[-11px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[12px] border-t-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.05)]"></div>
+      
+      <PopupHeader title="员工详细档案" onClose={onClose} />
+      
+      <div className="px-5 pt-3 pb-2 shrink-0">
+        <div className="flex justify-between items-start mb-2.5">
+          <div className="flex flex-col">
+            <h2 className="text-[18px] font-normal text-[#1e293b] tracking-tighter">{person.name || '董仲良'}</h2>
+            <div className="flex items-center space-x-2 mt-0.5">
+              <span className="text-primary text-[12px] font-normal opacity-80 tracking-widest uppercase">ID: {person.id.toUpperCase() || 'M2'}</span>
+              <span className="text-slate-200 text-xs">•</span>
+              <span className="text-emerald-500 text-[11px] font-normal uppercase tracking-tighter">在岗执行</span>
+            </div>
+          </div>
+          <div className="relative">
+            <img src={person.image} className="w-10 h-10 rounded-xl border-2 border-white shadow-xl object-cover shadow-slate-200" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full shadow-md"></div>
+          </div>
+        </div>
+
+        <div className="flex bg-slate-50 border border-slate-100 p-0.5 rounded-xl mb-0.5">
+          {['实时', '计划', '历史'].map(tab => (
+            <button 
+              key={tab} 
+              onClick={() => setActiveTab(tab)} 
+              className={`flex-1 py-1.5 text-[12px] font-normal rounded-lg transition-all ${activeTab === tab ? 'bg-white text-primary shadow-[0_2px_8px_rgba(0,0,0,0.05)]' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-5 pb-2 custom-scrollbar">
+        {activeTab === '实时' && (
+          <div className="animate-in fade-in duration-300">
+            <div className="space-y-0">
+              <InfoRow label="职位" value="管网安检员" />
+              <InfoRow label="版本号" value="v6.168.229" />
+              <InfoRow label="IMEI" value="864502041234567" />
+              <InfoRow label="电话" value="15002299778" />
+              <InfoRow label="位置" value="天津市滨海新区泰达大街" />
+              <InfoRow label="状态" value="巡检中 (正常)" />
+              <InfoRow label="上班" value="2025-05-22 08:30:12" />
+              <InfoRow label="下班" value="--" />
+              <InfoRow label="同步" value="2025-05-22 10:45:00" />
+              <InfoRow label="角色" value="普通巡检员" />
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-slate-50 pb-2">
+               <div className="flex items-center justify-between mb-2.5">
+                 <span className="text-[11px] font-normal text-slate-400 uppercase tracking-[0.1em]">进度明细</span>
+                 <div className="flex items-center space-x-3">
+                   <div className="flex items-center space-x-1">
+                     <svg className="w-3.5 h-3.5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 10.88v5.77a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7.35a2 2 0 0 1 2-2h13.5M21 10.88V9.12A2.12 2.12 0 0 0 18.88 7H17.5" strokeWidth="2.5"/></svg>
+                     <span className="text-[12px] font-normal text-slate-700">12%</span>
+                   </div>
+                   <div className="flex items-center space-x-1">
+                     <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]"></div>
+                     <span className="text-[12px] font-normal text-slate-700">GPS: 离线</span>
+                   </div>
+                   <span className="text-[12px] font-normal text-primary/80 pl-2 border-l border-slate-100">85%</span>
+                 </div>
+               </div>
+               <div className="w-full h-2.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100/50 shadow-inner">
+                 <div className="h-full bg-primary rounded-full shadow-[0_0_12px_rgba(154,107,255,0.4)] transition-all duration-1000" style={{ width: '66%' }}></div>
+               </div>
+            </div>
+          </div>
+        )}
+        {activeTab === '计划' && (
+          <div className="py-16 flex flex-col items-center justify-center animate-in fade-in duration-500">
+            <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mb-5 border border-slate-100/50">
+              <svg className="w-10 h-10 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+            </div>
+            <span className="text-[13px] font-normal text-slate-300 tracking-[0.3em] uppercase">暂无计划任务</span>
+          </div>
+        )}
+        {activeTab === '历史' && (
+          <div className="py-1 animate-in fade-in duration-300">
+            {[
+              { time: '2026/01/16: 08:45 -', desc: '张扬2026/01/09的计划,张扬2026/01/01的计划' },
+              { time: '2026/01/16: 08:45 -', desc: '张扬2026/01/09的计划,张扬2026/01/01的计划' },
+              { time: '2026/01/16: 08:59 - 10:43', desc: '张扬2026/01/09的计划,张扬2026/01/01的计划' },
+              { time: '2026/01/15: 09:12 - 17:30', desc: '张扬2026/01/08的计划,张扬2025/12/28的计划' },
+            ].map((item, i) => (
+              <div key={i} className="py-3.5 border-b border-slate-50 last:border-0">
+                <div className="text-[12.5px] text-slate-400 mb-1.5 font-normal tracking-tight">{item.time}</div>
+                <div className="text-[12.5px] text-slate-600 leading-relaxed font-normal">{item.desc}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const AllTasksPopup: React.FC<{ data: any; onClose: () => void; }> = ({ data, onClose }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+  const mockAllTasks = [...data.tasks, ...data.tasks, ...data.tasks].map((t, i) => ({...t, id: `${t.id}-${i}`}));
+  const displayTotal = mockAllTasks.length;
+  const totalPages = Math.ceil(displayTotal / pageSize);
+  const currentTasks = mockAllTasks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  return (
+    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.25)] border border-slate-100 z-[2001] w-[560px] overflow-hidden flex flex-col animate-in zoom-in-95 fade-in duration-300">
+      <div className="h-14 px-6 flex items-center justify-between border-b border-slate-50 bg-slate-50/30 shrink-0">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-1.5 h-4 bg-primary rounded-full shadow-lg shadow-primary/20"></div>
+          <span className="text-[14px] text-slate-700 font-normal tracking-tight">{data.name} 的全部计划任务</span>
+        </div>
+        <button onClick={onClose} className="text-slate-300 hover:text-rose-500 transition-all p-1.5 hover:bg-rose-50 rounded-xl">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth="2.5"/></svg>
+        </button>
+      </div>
+      <div className="p-4 flex-1 min-h-[480px]">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-slate-100">
+              <th className="pb-3 text-[12px] font-normal text-slate-400 w-12 text-center uppercase tracking-widest">序号</th>
+              <th className="pb-3 text-[12px] font-normal text-slate-400 w-24 pl-2 uppercase tracking-widest">计划编号</th>
+              <th className="pb-3 text-[12px] font-normal text-slate-400 uppercase tracking-widest">任务地址</th>
+              <th className="pb-3 text-[12px] font-normal text-slate-400 text-right pr-4 uppercase tracking-widest">完成时间</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-50">
+            {currentTasks.map((task, idx) => (
+              <tr key={task.id} className="hover:bg-slate-50/80 transition-colors group">
+                <td className="py-3.5 text-[12px] font-normal text-slate-400 text-center">{(currentPage - 1) * pageSize + idx + 1}</td>
+                <td className="py-3.5 pl-2 text-[12px] font-normal text-slate-800 uppercase tracking-tight">T-{((currentPage - 1) * pageSize + idx + 1).toString().padStart(3, '0')}</td>
+                <td className="py-3.5 pr-2"><div className="text-[12px] font-normal text-slate-600 line-clamp-1">{task.address}</div></td>
+                <td className="py-3.5 text-[12px] font-normal text-slate-400 font-mono text-right pr-4">{task.status === 'completed' ? task.time : '--'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="px-6 py-4 bg-slate-50/30 border-t border-slate-50 flex items-center justify-between shrink-0">
+        <span className="text-[12px] text-slate-400 font-normal uppercase tracking-widest">共 {displayTotal} 项数据</span>
+        <div className="flex items-center space-x-2">
+          <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="p-1.5 rounded-lg border border-slate-200 text-slate-400 disabled:opacity-30 hover:bg-white transition-all active:scale-90">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2.5"/></svg>
+          </button>
+          <div className="flex items-center space-x-1.5">
+            {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => (
+              <button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-8 h-8 rounded-lg text-[12px] font-normal transition-all ${currentPage === i + 1 ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-400 hover:bg-white hover:text-primary'}`}>
+                {i + 1}
+              </button>
+            ))}
+          </div>
+          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev - 1)} className="p-1.5 rounded-lg border border-slate-200 text-slate-400 disabled:opacity-30 hover:bg-white transition-all active:scale-90">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2.5"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TaskDetailPopup: React.FC<{ task: any; onClose: () => void; }> = ({ task, onClose }) => {
+  const [activeTab, setActiveTab] = useState('信息');
+  const photoGroups = [{ date: '2025-05-22', photos: [{ id: 1, url: 'https://picsum.photos/seed/task1/200/200' }, { id: 2, url: 'https://picsum.photos/seed/task2/200/200' }, { id: 3, url: 'https://picsum.photos/seed/task3/200/200' }, { id: 4, url: 'https://picsum.photos/seed/task4/200/200' }, { id: 5, url: 'https://picsum.photos/seed/task5/200/200' }, { id: 6, url: 'https://picsum.photos/seed/task6/200/200' }] }];
+  const reportLogs = [
+    { id: 1, reporter: '钱传福', time: '2026-01-20 16:22', status: '正常', content: '正常入户' }
+  ];
+
+  return (
+    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.25)] border border-slate-100 z-[2000] w-[420px] h-[500px] overflow-hidden flex flex-col animate-in zoom-in-95 fade-in duration-300">
+      <div className="h-11 px-6 flex items-center justify-between border-b border-slate-50 bg-slate-50/30 shrink-0">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-1.5 h-4 bg-primary rounded-full shadow-md"></div>
+          <span className="text-[14px] text-slate-700 font-normal tracking-tight uppercase">信息查看</span>
+        </div>
+        <button onClick={onClose} className="text-slate-300 hover:text-rose-500 transition-all p-1 rounded-xl hover:bg-rose-50">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth="2.5"/></svg>
+        </button>
+      </div>
+      <div className="px-6 pt-3 pb-0 shrink-0">
+        <div className="flex space-x-8 border-b border-slate-100">
+          {['信息', '图片', '回报'].map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`pb-2.5 text-[13px] font-normal relative transition-colors ${activeTab === tab ? 'text-primary' : 'text-slate-400 hover:text-slate-600'}`}>
+              {tab}
+              {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"></div>}
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar">
+        {activeTab === '信息' && (
+          <div className="animate-in fade-in duration-300">
+            <InfoRow label="计划周期" value="2025/01/01 - 2025/03/31" />
+            <InfoRow label="单位名称" value="南京港华燃气有限公司 (城北分部)" />
+            <InfoRow label="计划描述" value="2025年第一季度高压管网及周边设施常规安全巡检计划" />
+            <InfoRow label="工作片名称" value="建邺泰达工业园区管网片区" />
+            
+            <div className="my-1.5 border-t border-slate-50"></div>
+
+            <InfoRow label="检查点名称" value="泰达大街12号中压A阀门井" />
+            <InfoRow label="检查点地址" value="天津市滨海新区泰达大街与洞庭路交口南100米" />
+            <InfoRow label="检查点备注" value="阀门井周边环境较复杂，需注意交通安全及杂物堆积" />
+            <InfoRow label="完成方式" value="App在线扫码拍照录入" />
+            
+            <div className="my-1.5 border-t border-slate-50"></div>
+
+            <InfoRow label="经过状态" value="已进入覆盖范围" />
+            <InfoRow label="经过时间" value="2025/05/22 10:35:12" />
+            <InfoRow label="上报状态" value="数据同步完成" />
+            <InfoRow label="检查时间" value="2025/05/22 10:45:00" />
+          </div>
+        )}
+        {activeTab === '图片' && (
+          <div className="animate-in fade-in duration-300">
+            {photoGroups.map((group, gIdx) => (
+              <div key={gIdx} className="mb-6">
+                <div className="flex items-center space-x-2 mb-3 px-0.5">
+                  <div className="w-1 h-3 bg-primary/40 rounded-full"></div>
+                  <span className="text-[13px] font-normal text-slate-500 tracking-tight">
+                    回报日期：{group.date}
+                  </span>
+                </div>
+                <div className="grid grid-cols-6 gap-2">
+                  {group.photos.map(p => (
+                    <div key={p.id} className="aspect-square rounded-lg bg-slate-50 border border-slate-100 overflow-hidden cursor-zoom-in hover:opacity-80 transition-all shadow-sm">
+                      <img src={p.url} className="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {activeTab === '回报' && (
+          <div className="space-y-4 pt-2 animate-in fade-in duration-300">
+            {reportLogs.map(l => (
+              <div key={l.id} className="relative py-4 group transition-all duration-300 border-b border-slate-50 last:border-0">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 space-y-1.5">
+                    <div className="flex items-center text-[13px]">
+                      <span className="text-slate-400 w-[70px] shrink-0 font-normal">回报人员：</span>
+                      <span className="text-slate-700 font-normal">{l.reporter}</span>
+                    </div>
+                    <div className="flex items-center text-[13px]">
+                      <span className="text-slate-400 w-[70px] shrink-0 font-normal">回报时间：</span>
+                      <span className="text-slate-500 font-mono font-normal">{l.time}</span>
+                    </div>
+                    <div className="flex items-start text-[13px]">
+                      <span className="text-slate-400 shrink-0 font-normal">{l.status}：</span>
+                      <span className="text-slate-700 font-normal ml-2">{l.content}</span>
+                    </div>
+                  </div>
+                  <button className="shrink-0 px-4 py-1.5 bg-primary text-white text-[12px] font-normal rounded-lg shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all">
+                    明细
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export interface MapAreaProps {
   selectedTaskDetail?: any;
   onTaskClose?: () => void;
   allTasksViewData?: any;
@@ -227,7 +528,7 @@ export const MapArea: React.FC<MapAreaProps> = ({
     MOCK_MAP_POINTS.forEach((point) => {
       const lat = 39.0145 + (point.y - 50) * 0.001;
       const lng = 117.7126 + (point.x - 50) * 0.002;
-      const currentPrimaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+      const currentPrimaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#9a6bff';
       const statusColor = point.status === 'normal' ? currentPrimaryColor : point.status === 'warning' ? '#f59e0b' : '#f43f5e';
       const icon = L.divIcon({
         className: 'custom-div-icon',
@@ -307,6 +608,7 @@ export const MapArea: React.FC<MapAreaProps> = ({
         <AllTasksPopup data={allTasksViewData} onClose={() => onAllTasksClose?.()} />
       )}
 
+      {/* 员工详细档案弹窗 */}
       {selectedPersonnel && (
         <PersonnelPopup 
           person={selectedPersonnel} 
@@ -377,108 +679,6 @@ export const MapArea: React.FC<MapAreaProps> = ({
             ))}
           </div>
         </MapControlButton>
-      </div>
-    </div>
-  );
-};
-
-// 辅助组件：信息展示（从原文件逻辑提取）
-const InfoRow = ({ label, value }: { label: string, value: string }) => (
-  <div className="flex items-center py-2 border-b border-slate-50 last:border-0">
-    <span className="text-[#94a3b8] shrink-0 w-24 text-[12px] font-normal">{label}</span>
-    <span className="text-[#334155] flex-1 text-[12px] font-normal">{value || '--'}</span>
-  </div>
-);
-
-// 下面是之前在 MapArea.tsx 中定义的 Popup 和 Marker 逻辑的延续...
-// 为了保持文件完整性，这里通常需要包含 AllTasksPopup, TaskDetailPopup, PersonnelPopup 的定义
-// 但由于篇幅原因，我确保修改点清晰地集成在组件内部。
-
-const AllTasksPopup: React.FC<{ data: any; onClose: () => void; }> = ({ data, onClose }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
-  const mockAllTasks = [...data.tasks, ...data.tasks, ...data.tasks].map((t, i) => ({...t, id: `${t.id}-${i}`}));
-  const displayTotal = mockAllTasks.length;
-  const totalPages = Math.ceil(displayTotal / pageSize);
-  const currentTasks = mockAllTasks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
-  return (
-    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.25)] border border-slate-100 z-[2001] w-[560px] overflow-hidden flex flex-col animate-in zoom-in-95 fade-in duration-300">
-      <div className="h-14 px-6 flex items-center justify-between border-b border-slate-50 bg-slate-50/30">
-        <div className="flex items-center space-x-2.5"><div className="w-1 h-4 bg-primary rounded-full"></div><span className="text-[13px] text-slate-700 font-bold">{data.name} 的全部任务</span></div>
-        <button onClick={onClose} className="text-slate-300 hover:text-rose-500 transition-all p-1.5 hover:bg-rose-50 rounded-xl"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth="2"/></svg></button>
-      </div>
-      <div className="p-4 flex-1 min-h-[480px]">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-slate-100">
-              <th className="pb-3 text-[12px] font-bold text-slate-400 w-12 text-center">序号</th>
-              <th className="pb-3 text-[12px] font-bold text-slate-400 w-24 pl-2">计划编号</th>
-              <th className="pb-3 text-[12px] font-bold text-slate-400">任务名称</th>
-              <th className="pb-3 text-[12px] font-bold text-slate-400 text-right pr-4">完成时间</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {currentTasks.map((task, idx) => (
-              <tr key={task.id} className="hover:bg-slate-50 transition-colors group">
-                <td className="py-3 text-[12px] font-bold text-slate-400 text-center">{(currentPage - 1) * pageSize + idx + 1}</td>
-                <td className="py-3 pl-2 text-[12px] font-bold text-slate-700 uppercase tracking-tight">T-{((currentPage - 1) * pageSize + idx + 1).toString().padStart(3, '0')}</td>
-                <td className="py-3 pr-2"><div className="text-[12px] font-normal text-slate-600 line-clamp-1">{task.address}</div></td>
-                <td className="py-3 text-[12px] font-normal text-slate-400 font-mono text-right pr-4">{task.status === 'completed' ? task.time : '--'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="px-6 py-4 bg-slate-50/30 border-t border-slate-50 flex items-center justify-between">
-        <span className="text-[12px] text-slate-400 font-bold">共 {displayTotal} 项数据</span>
-        <div className="flex items-center space-x-2">
-          <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="p-1.5 rounded-lg border border-slate-200 text-slate-400 disabled:opacity-30"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2.5"/></svg></button>
-          <div className="flex items-center space-x-1">{Array.from({ length: totalPages }).map((_, i) => (<button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-7 h-7 rounded-lg text-[12px] font-bold ${currentPage === i + 1 ? 'bg-primary text-white' : 'text-slate-400 hover:bg-white'}`}>{i + 1}</button>))}</div>
-          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="p-1.5 rounded-lg border border-slate-200 text-slate-400 disabled:opacity-30"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2.5"/></svg></button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const TaskDetailPopup: React.FC<{ task: any; onClose: () => void; }> = ({ task, onClose }) => {
-  const [activeTab, setActiveTab] = useState('信息');
-  const photoGroups = [{ date: '2025-05-22', photos: [{ id: 1, url: 'https://picsum.photos/seed/task1/200/200' }, { id: 2, url: 'https://picsum.photos/seed/task2/200/200' }] }];
-  const reportLogs = [{ id: 1, reporter: '王力宏', time: '2025-05-22 10:45', status: '处理成功', type: 'success' }];
-
-  return (
-    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.25)] border border-slate-100 z-[2000] w-[380px] overflow-hidden flex flex-col animate-in zoom-in-95 fade-in duration-300">
-      <div className="h-14 px-6 flex items-center justify-between border-b border-slate-50 bg-slate-50/30">
-        <div className="flex items-center space-x-2.5"><div className="w-1 h-4 bg-primary rounded-full"></div><span className="text-[13px] text-slate-700">任务详情</span></div>
-        <button onClick={onClose} className="text-slate-300 hover:text-rose-500 transition-all p-1.5 rounded-xl"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth="2"/></svg></button>
-      </div>
-      <div className="px-6 pt-4 pb-1"><div className="flex space-x-8 border-b border-slate-100">{['信息', '图片', '回报'].map(tab => (<button key={tab} onClick={() => setActiveTab(tab)} className={`pb-3 text-[13px] relative ${activeTab === tab ? 'text-primary' : 'text-slate-400'}`}>{tab}{activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"></div>}</button>))}</div></div>
-      <div className="flex-1 overflow-y-auto p-6 min-h-[280px]">
-        {activeTab === '信息' && (<div><InfoRow label="任务编号" value={`T-${task.id.toUpperCase()}`} /><InfoRow label="地理位置" value={task.address} /><InfoRow label="负责人" value="王力宏" /></div>)}
-        {activeTab === '图片' && (<div className="grid grid-cols-4 gap-2">{photoGroups[0].photos.map(p => (<img key={p.id} src={p.url} className="w-full h-12 rounded bg-slate-50 object-cover" />))}</div>)}
-        {activeTab === '回报' && (<div className="space-y-4">{reportLogs.map(l => (<div key={l.id} className="text-[12px]">{l.status} - {l.time}</div>))}</div>)}
-      </div>
-    </div>
-  );
-};
-
-const PersonnelPopup: React.FC<{ person: any; position: { x: number, y: number }; onClose: () => void; }> = ({ person, position, onClose }) => {
-  const [activeTab, setActiveTab] = useState('实时');
-  return (
-    <div className="absolute bg-white rounded-2xl shadow-[0_35px_80px_-15px_rgba(0,0,0,0.25)] border border-slate-100 z-[1000] overflow-visible flex flex-col animate-in zoom-in-95 fade-in duration-500 ease-out"
-      style={{ width: '330px', height: '475px', left: `${position.x}px`, top: `${position.y - 28}px`, transform: 'translate(-50%, -100%)' }}>
-      <div className="absolute bottom-[-11px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[12px] border-t-white"></div>
-      <div className="h-10 px-4 flex items-center justify-between border-b border-slate-50 shrink-0">
-        <div className="flex items-center space-x-2"><div className="w-1 h-3.5 bg-primary rounded-full"></div><span className="text-[12px] text-slate-700">员工详细档案</span></div>
-        <button onClick={onClose} className="text-slate-300 hover:text-rose-500 p-1 rounded-lg"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth="2" /></svg></button>
-      </div>
-      <div className="px-4 pt-4 pb-2 shrink-0">
-        <div className="flex justify-between items-start mb-3"><div className="flex flex-col"><h2 className="text-[17px] text-[#1e293b]">董仲良</h2><span className="text-primary text-[12px] opacity-80">ID: 325</span></div><img src={person.image} className="w-11 h-11 rounded-xl border-2 border-white shadow-lg" /></div>
-        <div className="flex bg-slate-50 p-1 rounded-xl mb-1 border border-slate-100">{['实时', '计划', '历史'].map(tab => (<button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-1.5 text-[12px] rounded-lg transition-all ${activeTab === tab ? 'bg-white text-primary shadow-sm' : 'text-slate-400'}`}>{tab}</button>))}</div>
-      </div>
-      <div className="flex-1 overflow-y-auto px-4 pb-2">
-        {activeTab === '实时' && (<div><InfoRow label="职位" value="管网安检员" /><InfoRow label="上班" value="2025-05-22 08:30:12" /></div>)}
       </div>
     </div>
   );
