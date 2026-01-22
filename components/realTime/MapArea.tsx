@@ -15,7 +15,7 @@ const toQuadKey = (x: number, y: number, z: number) => {
   return quadKey;
 };
 
-// 轨迹回放控制条组件
+/* begin: 轨迹回放控制条通用样式 */
 const PlaybackControl: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -57,28 +57,27 @@ const PlaybackControl: React.FC<{
 
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-6 duration-500 ease-out">
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] px-6 py-4 flex items-center space-x-6 w-[700px]">
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] px-6 py-3 flex items-center space-x-6 w-[700px]">
         <button onClick={onClose} className="absolute -top-3 -right-3 w-8 h-8 bg-white border border-slate-100 rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
 
         <button 
           onClick={() => setIsPlaying(!isPlaying)}
-          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-90 ${isPlaying ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-primary text-white shadow-lg shadow-primary/30'}`}
+          className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all active:scale-90 shrink-0 ${isPlaying ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-primary text-white shadow-lg shadow-primary/30'}`}
         >
           {isPlaying ? (
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
           ) : (
-            <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg className="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           )}
         </button>
 
-        <div className="flex-1 flex flex-col space-y-2">
-          <div className="flex justify-between items-center px-1">
-            <span className="text-[12px] font-normal text-slate-700">人员轨迹回放明细</span>
+        <div className="flex-1 flex flex-col space-y-1">
+          <div className="flex justify-end items-center px-1">
             <span className="text-[11px] font-mono text-slate-400 font-normal tracking-tighter">{Math.floor(progress)}%</span>
           </div>
-          <div className="relative h-2 group">
+          <div className="relative h-1 group">
             <input 
               type="range" 
               min="0" 
@@ -88,9 +87,9 @@ const PlaybackControl: React.FC<{
               onMouseDown={() => setIsDragging(true)}
               onMouseUp={() => setIsDragging(false)}
               onChange={handleSeek}
-              className="absolute inset-0 w-full h-2 appearance-none bg-slate-100 rounded-full cursor-pointer accent-primary"
+              className="absolute inset-0 w-full h-1 appearance-none bg-slate-100 rounded-full cursor-pointer accent-primary"
             />
-            <div className="absolute inset-0 h-2 bg-primary/20 rounded-full pointer-events-none overflow-hidden">
+            <div className="absolute inset-0 h-1 bg-primary/20 rounded-full pointer-events-none overflow-hidden">
                <div className="h-full bg-primary transition-all duration-75" style={{ width: `${progress}%` }}></div>
             </div>
           </div>
@@ -116,8 +115,9 @@ const PlaybackControl: React.FC<{
     </div>
   );
 };
+/* end: 轨迹回放控制条通用样式 */
 
-// 辅助组件：信息展示行 ( py-0.5 极致压缩)
+/* begin: 通用信息展示行样式 */
 const InfoRow = ({ label, value, isBoldValue = false }: { label: string, value?: string, isBoldValue?: boolean }) => (
   <div className="flex items-start py-0.5 border-b border-slate-50/50 last:border-0">
     <span className="text-[#94a3b8] shrink-0 w-[90px] text-[13px] font-normal leading-relaxed">{label}</span>
@@ -126,8 +126,9 @@ const InfoRow = ({ label, value, isBoldValue = false }: { label: string, value?:
     </span>
   </div>
 );
+/* end: 通用信息展示行样式 */
 
-// 辅助组件：弹窗头部 ( h-11 压缩)
+/* begin: 通用弹窗头部样式 */
 const PopupHeader = ({ title, onClose }: { title: string, onClose: () => void }) => (
   <div className="h-11 px-5 flex items-center justify-between border-b border-slate-50 shrink-0 bg-white rounded-t-2xl">
     <div className="flex items-center space-x-2.5">
@@ -139,7 +140,9 @@ const PopupHeader = ({ title, onClose }: { title: string, onClose: () => void })
     </button>
   </div>
 );
+/* end: 通用弹窗头部样式 */
 
+/* begin: 员工档案弹窗组件 */
 const PersonnelPopup: React.FC<{ person: any; position: { x: number, y: number }; onClose: () => void; }> = ({ person, position, onClose }) => {
   const [activeTab, setActiveTab] = useState('实时');
   
@@ -253,7 +256,9 @@ const PersonnelPopup: React.FC<{ person: any; position: { x: number, y: number }
     </div>
   );
 };
+/* end: 员工档案弹窗组件 */
 
+/* begin: 任务列表全屏查看样式 */
 const AllTasksPopup: React.FC<{ data: any; onClose: () => void; }> = ({ data, onClose }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -316,7 +321,9 @@ const AllTasksPopup: React.FC<{ data: any; onClose: () => void; }> = ({ data, on
     </div>
   );
 };
+/* end: 任务列表全屏查看样式 */
 
+/* begin: 任务详情弹窗组件 */
 const TaskDetailPopup: React.FC<{ task: any; onClose: () => void; }> = ({ task, onClose }) => {
   const [activeTab, setActiveTab] = useState('信息');
   const photoGroups = [{ date: '2025-05-22', photos: [{ id: 1, url: 'https://picsum.photos/seed/task1/200/200' }, { id: 2, url: 'https://picsum.photos/seed/task2/200/200' }, { id: 3, url: 'https://picsum.photos/seed/task3/200/200' }, { id: 4, url: 'https://picsum.photos/seed/task4/200/200' }, { id: 5, url: 'https://picsum.photos/seed/task5/200/200' }, { id: 6, url: 'https://picsum.photos/seed/task6/200/200' }] }];
@@ -421,6 +428,7 @@ const TaskDetailPopup: React.FC<{ task: any; onClose: () => void; }> = ({ task, 
     </div>
   );
 };
+/* end: 任务详情弹窗组件 */
 
 export interface MapAreaProps {
   selectedTaskDetail?: any;
@@ -530,11 +538,15 @@ export const MapArea: React.FC<MapAreaProps> = ({
       const lng = 117.7126 + (point.x - 50) * 0.002;
       const currentPrimaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#9a6bff';
       const statusColor = point.status === 'normal' ? currentPrimaryColor : point.status === 'warning' ? '#f59e0b' : '#f43f5e';
+      
+      /* begin: 地图标注点 HTML 样式 */
       const icon = L.divIcon({
         className: 'custom-div-icon',
         html: `<div class="relative flex items-center justify-center"><div class="absolute w-12 h-12 rounded-full opacity-40 ping-animation" style="background-color: ${statusColor}"></div><div class="w-10 h-10 rounded-lg border-2 border-white overflow-hidden shadow-xl bg-white relative z-10" style="border-color: ${statusColor}"><img src="${point.image}" class="w-full h-full object-cover" /></div></div>`,
         iconSize: [40, 40], iconAnchor: [20, 20]
       });
+      /* end: 地图标注点 HTML 样式 */
+
       const marker = L.marker([lat, lng], { icon }).addTo(mapRef.current);
       marker.on('click', (e: any) => { 
         const latlng = e.target.getLatLng();

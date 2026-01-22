@@ -33,7 +33,8 @@ export const SiteManagementContent: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-[#f8fafc] p-2.5 gap-2.5 overflow-hidden items-center">
-      {/* 顶部工具栏 */}
+      
+      {/* begin: 工地管理顶部工具栏样式 */}
       <div className="w-full max-w-[1550px] flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm shrink-0">
         <div className="flex items-center space-x-2">
           <button className="px-4 py-2 bg-[#9a6bff] text-white text-xs font-bold rounded-lg hover:bg-[#8558eb] transition-colors flex items-center">
@@ -62,11 +63,11 @@ export const SiteManagementContent: React.FC = () => {
           </div>
         </div>
       </div>
+      {/* end: 工地管理顶部工具栏样式 */}
 
-      {/* 下方三栏布局 */}
       <div className="w-full max-w-[1550px] flex-1 flex gap-2.5 min-h-0 overflow-hidden">
         
-        {/* 左侧：查询条件卡片 */}
+        {/* begin: 左侧多维度查询卡片样式 */}
         <div className="w-60 bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex flex-col shrink-0">
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center">
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
@@ -102,7 +103,6 @@ export const SiteManagementContent: React.FC = () => {
               </div>
             </div>
           </div>
-          {/* 操作按钮组：查询与重置 */}
           <div className="flex gap-2.5 mt-4">
             <button className="flex-1 py-2 bg-[#9a6bff] text-white text-xs font-bold rounded-lg hover:bg-[#8558eb] transition-all active:scale-95 shadow-md shadow-[#9a6bff]/20">
               查询
@@ -112,8 +112,9 @@ export const SiteManagementContent: React.FC = () => {
             </button>
           </div>
         </div>
+        {/* end: 左侧多维度查询卡片样式 */}
 
-        {/* 中间：表格卡片 */}
+        {/* begin: 中间数据表格通用容器样式 */}
         <div className="flex-1 min-w-0 max-w-[1200px] bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
           <div className="flex-1 overflow-auto custom-scrollbar">
             <table className="w-full border-collapse min-w-[1250px]">
@@ -176,7 +177,6 @@ export const SiteManagementContent: React.FC = () => {
               </tbody>
             </table>
           </div>
-          {/* 表格底部分页预览 */}
           <div className="h-11 border-t border-slate-50 flex items-center justify-between px-6 bg-slate-50/30 shrink-0">
             <span className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">共 4 条记录</span>
             <div className="flex space-x-1">
@@ -186,8 +186,8 @@ export const SiteManagementContent: React.FC = () => {
             </div>
           </div>
         </div>
+        {/* end: 中间数据表格通用容器样式 */}
 
-        {/* 右侧：固定导航栏卡片 */}
         <div className="w-14 bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center py-4 shrink-0">
           <div className="flex flex-col items-center space-y-4">
             <button className="w-10 h-10 rounded-xl bg-[#9a6bff] text-white shadow-lg shadow-[#9a6bff]/30 flex items-center justify-center transition-all active:scale-95">

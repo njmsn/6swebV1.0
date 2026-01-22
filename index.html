@@ -127,6 +127,16 @@
       .ping-animation {
         animation: sonar-wave 2s infinite ease-out;
       }
+
+      /* 新数据背景闪烁提醒动画 - 换色为更有区分度的琥珀色 (Amber-400) */
+      @keyframes alert-pulse {
+        0% { background-color: transparent; }
+        50% { background-color: rgba(251, 191, 36, 0.5); } /* 琥珀橘色，比紫色更能引起注意 */
+        100% { background-color: transparent; }
+      }
+      .bg-alert-pulse {
+        animation: alert-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
     </style>
     <script type="importmap">
     {

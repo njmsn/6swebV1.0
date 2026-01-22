@@ -272,6 +272,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
     { id: 'l6', title: '登录系统', time: '11:05' },
   ];
 
+  /* begin: 通用过滤复选框样式 */
   const FilterCheckbox = ({ label, checked = true }: { label: string; checked?: boolean }) => (
     <label className="flex items-center space-x-1.5 cursor-pointer group select-none">
       <div className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-all ${checked ? 'bg-[#3b82f6] text-white' : 'border border-slate-200 bg-white group-hover:border-[#3b82f6]'}`}>
@@ -284,12 +285,14 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
       <span className="text-[12px] font-normal text-slate-600 group-hover:text-slate-800 transition-colors">{label}</span>
     </label>
   );
+  /* end: 通用过滤复选框样式 */
 
   const renderItemList = (data: any[]) => (
     <div className="flex-1 overflow-y-auto custom-scrollbar px-6 space-y-4 pb-12 pt-1 relative z-10 mt-2">
       {data.map((item) => {
         const isExpanded = expandedItemId === item.id;
         return (
+          /* begin: 列表项卡片通用容器样式 */
           <div 
             key={item.id} 
             className={`group cursor-pointer p-4 -mx-2 rounded-2xl transition-all duration-300 border ${
@@ -500,6 +503,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
               </div>
             )}
           </div>
+          /* end: 列表项卡片通用容器样式 */
         );
       })}
     </div>
@@ -785,11 +789,11 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
           <SidebarButton active={activeSubTab === 'personnel'} onClick={() => handleTabClick('personnel')} label="人员" icon={<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />} />
           <SidebarButton active={activeSubTab === 'vehicle'} onClick={() => handleTabClick('vehicle')} label="车辆" icon={<path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />} />
           <SidebarButton active={activeSubTab === 'drone'} onClick={() => handleTabClick('drone')} label="无人机" icon={<path d={DRONE_PATH} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />} />
-          <SidebarButton active={activeSubTab === 'hazard'} onClick={() => handleTabClick('hazard')} label="隐患" icon={<path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 16h2v2h-2zm0-6h2v4h-2z" />} />
-          <SidebarButton active={activeSubTab === 'alarm'} onClick={() => handleTabClick('alarm')} label="报警" icon={<path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />} />
-          <SidebarButton active={activeSubTab === 'site'} onClick={() => handleTabClick('site')} label="工地" icon={<path d="M14 6V4h-4v2h4zM4 8v11h16V8H4zm14 9h-2V10h2v7zm-4 0h-2V10h2v7zm-4 0H8V10h2v7zM2 6h20v15H2V6z" />} />
-          <SidebarButton active={activeSubTab === 'droneLeak'} onClick={() => handleTabClick('droneLeak')} label="无人机漏点" icon={<g><path d={DRONE_PATH} stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none"/><circle cx="12" cy="12" r="2" fill="currentColor" className="opacity-40" /></g>} />
-          <SidebarButton active={activeSubTab === 'vehicleLeak'} onClick={() => handleTabClick('vehicleLeak')} label="测漏车漏点" icon={<g><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/><circle cx="11" cy="11" r="2" fill="currentColor" className="opacity-40" /></g>} />
+          <SidebarButton active={activeSubTab === 'hazard'} onClick={() => handleTabClick('hazard')} label="隐患" hasNewData icon={<path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 16h2v2h-2zm0-6h2v4h-2z" />} />
+          <SidebarButton active={activeSubTab === 'alarm'} onClick={() => handleTabClick('alarm')} label="报警" hasNewData icon={<path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />} />
+          <SidebarButton active={activeSubTab === 'site'} onClick={() => handleTabClick('site')} label="工地" hasNewData icon={<path d="M14 6V4h-4v2h4zM4 8v11h16V8H4zm14 9h-2V10h2v7zm-4 0h-2V10h2v7zm-4 0H8V10h2v7zM2 6h20v15H2V6z" />} />
+          <SidebarButton active={activeSubTab === 'droneLeak'} onClick={() => handleTabClick('droneLeak')} label="无人机漏点" hasNewData icon={<g><path d={DRONE_PATH} stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none"/><circle cx="12" cy="12" r="2" fill="currentColor" className="opacity-40" /></g>} />
+          <SidebarButton active={activeSubTab === 'vehicleLeak'} onClick={() => handleTabClick('vehicleLeak')} label="测漏车漏点" hasNewData icon={<g><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/><circle cx="11" cy="11" r="2" fill="currentColor" className="opacity-40" /></g>} />
         </div>
         <div className="mt-auto space-y-3 pb-2 shrink-0">
           <div className="w-1 h-1 rounded-full bg-slate-300 mx-auto"></div>
@@ -800,13 +804,33 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
   );
 };
 
-const SidebarButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, onClick, icon, label }) => (
+/* begin: 侧边栏子页签按钮通用样式 */
+const SidebarButton: React.FC<{ 
+  active: boolean; 
+  onClick: () => void; 
+  icon: React.ReactNode; 
+  label: string;
+  hasNewData?: boolean; // 新增属性：是否有新数据需要提醒
+}> = ({ active, onClick, icon, label, hasNewData }) => (
   <div className="relative group/btn">
-    <button onClick={onClick} className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all duration-300 relative z-10 ${active ? 'bg-[#9a6bff] text-white shadow-lg shadow-[#9a6bff]/30' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50/80'}`}>
+    <button 
+      onClick={onClick} 
+      className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all duration-300 relative z-10 
+        ${active 
+          ? 'bg-[#9a6bff] text-white shadow-lg shadow-[#9a6bff]/30' 
+          : hasNewData 
+            ? 'bg-alert-pulse text-slate-400 hover:text-slate-600 hover:bg-slate-50/80' 
+            : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50/80'}`}
+    >
       <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">{icon}</svg>
+      {/* 如果有新数据且未激活，显示一个小红点增强提示 */}
+      {hasNewData && !active && (
+        <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full border border-white"></span>
+      )}
     </button>
     <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 opacity-0 group-hover/btn:opacity-100 transition-all duration-200 translate-x-2 group-hover/btn:translate-x-0 z-[9999] pointer-events-none">
       <div className="tooltip-bubble relative shadow-2xl">{label}<div className="absolute top-1/2 -translate-y-1/2 -right-[4px] w-2 h-2 bg-[#080b1a] rotate-45"></div></div>
     </div>
   </div>
 );
+/* end: 侧边栏子页签按钮通用样式 */
