@@ -122,7 +122,7 @@ const App: React.FC = () => {
         }} />
       )}
 
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 gap-1.5 overflow-hidden ${isFullscreen ? 'p-0' : 'py-2 pr-2.5 pl-2.5'}`}>
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 gap-1 overflow-hidden ${isFullscreen ? 'p-0' : 'py-1 pr-2.5 pl-2.5'}`}>
         {!isFullscreen && <Header />}
 
         <div className={`flex-1 flex flex-col bg-white border border-slate-200/50 overflow-hidden relative transition-all duration-300 ${isFullscreen ? 'rounded-none border-none' : 'rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]'}`}>

@@ -43,6 +43,10 @@ const DRONE_PATH = `
   M11 15v2a1 1 0 0 0 2 0v-2 M10 18h4
 `;
 
+const SITE_ICON_PATH = `M12 3a9 9 0 0 0-9 9c0 .18.01.35.03.53A4 4 0 0 1 7 16h10a4 4 0 0 1 3.97-3.47c.02-.18.03-.35.03-.53a9 9 0 0 0-9-9zM12 5v4m-4-3l1.5 2.5m6.5-2.5L14.5 9`;
+
+const VEHICLE_OUTLINE_PATH = `M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.806H8.002c-.822 0-1.585.391-2.074 1.047l-2.623 3.525a1.214 1.214 0 01-.673.465m0 0A1.23 1.23 0 003.375 14.25h15.75`;
+
 export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onToggle, onTaskClick, onViewAllTasks, onPlaybackToggle }) => {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('personnel');
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
@@ -286,28 +290,43 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
   );
 
   const renderItemList = (data: any[]) => (
-    <div className="flex-1 overflow-y-auto custom-scrollbar px-6 space-y-4 pb-12 pt-1 relative z-10 mt-2">
+    <div className="flex-1 overflow-y-auto custom-scrollbar px-4 space-y-4 pb-12 pt-1 relative z-10 mt-2">
       {data.map((item) => {
         const isExpanded = expandedItemId === item.id;
         return (
           <div 
             key={item.id} 
-            className={`group cursor-pointer p-4 -mx-2 rounded-2xl transition-all duration-300 border ${
+            className={`group cursor-pointer py-4 px-2 -mx-2 rounded-2xl transition-all duration-300 border ${
               isExpanded 
                 ? 'bg-white border-[#9a6bff]/20 shadow-[0_20px_50px_-12px_rgba(154,107,255,0.12)] mb-6 z-10' 
                 : 'border-transparent hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.06)] hover:bg-slate-50/50'
             }`}
             onClick={() => toggleExpand(item.id)}
           >
-            <div className="flex items-center space-x-3.5 mb-3">
+            <div className="flex items-center space-x-2 mb-3">
               <div className="relative shrink-0">
                 <img src={item.avatar} className="w-12 h-12 rounded-xl object-contain bg-slate-50 p-1 shadow-sm transition-transform duration-300" alt={item.name} />
                 <div className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-white rounded-full ${item.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`}></div>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[15px] font-bold text-slate-800 truncate">{item.name}</h3>
-                  <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center space-x-1.5 flex-1 min-w-0">
+                    <h3 className="text-[14px] font-bold text-slate-800 truncate w-[52px] shrink-0">{item.name}</h3>
+                    {/* 进度条：使用黑色文字，配合极致强化的白色光晕，确保在任何背景色段上均极致清晰 */}
+                    <div className="w-32 relative h-[14px] bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 shadow-inner shrink-0 group-hover:border-slate-300/50 transition-colors">
+                      <div 
+                        className="h-full bg-emerald-500 transition-all duration-1000 ease-out rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                        style={{ width: `${item.progress}%` }}
+                      ></div>
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span className="text-[10px] font-black text-black leading-none drop-shadow-[0_0_1.5px_white] drop-shadow-[0_0_1.5px_white]">
+                          {item.progress}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 shrink-0">
                     <div className="flex items-center text-[12px] font-bold tracking-tight">
                       <span className="text-[#9a6bff]">1</span>
                       <span className="mx-1 text-slate-200 font-normal">-</span>
@@ -319,28 +338,15 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   </div>
                 </div>
                 <div className="flex items-center mt-1 text-[12px] text-slate-400 font-normal space-x-1.5">
-                  <span>{item.role}</span>
+                  <span className="truncate">{item.role}</span>
                   <span className="text-slate-300">•</span>
-                  <div className="flex items-center truncate">
-                    <svg className="w-3.5 h-3.5 mr-1 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center truncate max-w-[120px]">
+                    <svg className="w-3.5 h-3.5 mr-1 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5" />
                     </svg>
                     <span className="truncate">{item.location}</span>
                   </div>
                 </div>
-              </div>
-            </div>
-            
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[12px] font-normal">
-                <span className="text-slate-400">巡检任务完成度</span>
-                <span className="text-slate-800 font-medium">{item.progress}%</span>
-              </div>
-              <div className="w-full h-[3px] bg-slate-100/50 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-[#9a6bff] transition-all duration-1000 ease-out rounded-full shadow-[0_0_8px_rgba(154,107,255,0.3)]"
-                  style={{ width: `${item.progress}%` }}
-                ></div>
               </div>
             </div>
 
@@ -366,7 +372,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                 </div>
 
                 {activeDetailTab === 'trajectory' && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 px-2">
                     <div className="bg-[#9a6bff]/5 rounded-2xl p-4 flex items-center justify-between border border-[#9a6bff]/10">
                       <div className="space-y-1">
                         <span className="text-[12px] text-[#9a6bff]/60 font-medium uppercase tracking-wider">总公里数</span>
@@ -383,7 +389,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                     </div>
                     <div className="pt-0.5">
                       <div className="flex items-center justify-between mb-3 px-1">
-                        <span className="text-[12px] font-medium text-slate-300 uppercase tracking-[0.15em] select-none">轨迹明细片段</span>
+                        <span className="text-[12px] font-normal text-slate-600 uppercase tracking-[0.15em] select-none">轨迹明细片段</span>
                         <div className="flex items-center space-x-2">
                           <div className="relative">
                             <button 
@@ -442,36 +448,40 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                 )}
 
                 {activeDetailTab === 'task' && (
-                  <div className="space-y-3.5 pt-1.5 pb-3">
-                    <div onClick={() => setIsTaskPlanExpanded(!isTaskPlanExpanded)} className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 p-2 -mx-2 rounded-lg transition-colors">
+                  <div className="space-y-1.5 pt-0 pb-1.5 px-2">
+                    <div onClick={() => setIsTaskPlanExpanded(!isTaskPlanExpanded)} className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 py-1 px-2 -mx-2 rounded-lg transition-colors">
                       <span className="text-[12px] font-normal text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
                         {activeSubTab === 'personnel' ? '用户安检' : '抢修作业'}-{item.name}{selectedDate ? selectedDate.replace(/-/g, '/') : '未选日期'}的计划
                       </span>
                       <svg className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isTaskPlanExpanded ? 'rotate-0' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7" strokeWidth="2"/></svg>
                     </div>
                     {isTaskPlanExpanded && (
-                      <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="bg-[#fcfdfe] border border-slate-50 rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                          <div className="flex items-center space-x-6">
-                            <div className="flex flex-col"><span className="text-[12px] text-slate-400 font-normal mb-0.5">总计</span><span className="text-xl font-bold text-slate-800">48</span></div>
-                            <div className="flex flex-col"><span className="text-[12px] text-[#10b981] font-normal mb-0.5">已完成</span><span className="text-xl font-bold text-[#10b981]">32</span></div>
-                            <button 
-                              onClick={() => onViewAllTasks?.({ name: item.name, tasks: mockTasks })}
-                              className="px-4 py-1.5 bg-[#9a6bff]/5 text-[#9a6bff] rounded-full text-[12px] font-normal hover:bg-[#9a6bff]/10 transition-colors shadow-sm"
-                            >
-                              查看全部
-                            </button>
+                      <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="pl-4 pr-1 flex items-center justify-between">
+                          <div className="flex items-center space-x-12">
+                            {/* 数据项水平排列：数字大小调整为12px且不加粗 */}
+                            <div className="flex items-center space-x-2">
+                              <span className="text-[12px] text-slate-400 font-normal">总计</span>
+                              <span className="text-[12px] font-normal text-slate-800 leading-none">48</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-[12px] text-[#10b981] font-normal">已完成</span>
+                              <span className="text-[12px] font-normal text-[#10b981] leading-none">32</span>
+                            </div>
                           </div>
-                          <div className="relative w-10 h-10 flex items-center justify-center">
-                            <svg className="w-full h-full transform -rotate-90"><circle cx="20" cy="20" r="16" stroke="currentColor" strokeWidth="3" fill="transparent" className="text-emerald-500/10"/><circle cx="20" cy="20" r="16" stroke="currentColor" strokeWidth="3" strokeDasharray={100.5} strokeDashoffset={100.5 * (1 - 0.66)} strokeLinecap="round" fill="transparent" className="text-emerald-500 transition-all duration-1000"/></svg>
-                            <span className="absolute text-[12px] font-bold text-emerald-500">66%</span>
-                          </div>
+                          <button 
+                            onClick={() => onViewAllTasks?.({ name: item.name, tasks: mockTasks })}
+                            className="px-4 py-1 bg-[#9a6bff]/5 text-[#9a6bff] rounded-full text-[12px] font-normal hover:bg-[#9a6bff]/10 transition-colors shadow-sm shrink-0"
+                          >
+                            查看全部
+                          </button>
                         </div>
-                        <div className="space-y-0 border-t border-slate-50 pt-2">
+                        {/* 稍微减小 pl-5 为 pl-4，使列表略向左靠 */}
+                        <div className="space-y-0 border-t border-slate-50 pt-0.5 pl-4">
                           {mockTasks.slice(0, 4).map((task) => (
                             <div 
                               key={task.id} 
-                              className="flex items-center justify-between py-2 group/task-item border-b border-slate-50/50 last:border-0 px-1 cursor-pointer hover:bg-slate-50 rounded-md transition-colors"
+                              className="flex items-center justify-between py-1.5 group/task-item border-b border-slate-50/50 last:border-0 pr-1 cursor-pointer hover:bg-slate-50 rounded-md transition-colors"
                               onClick={() => onTaskClick?.(task)}
                             >
                               <div className="flex items-center space-x-3 overflow-hidden flex-1">
@@ -488,13 +498,34 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                 )}
 
                 {activeDetailTab === 'log' && (
-                  <div className="space-y-0 pt-1 px-1">
-                    {mockLogs.map((log) => (
-                      <div key={log.id} className="flex items-center justify-between py-2.5 border-b border-slate-50 last:border-0 group/log-item">
-                        <span className="text-[12px] font-normal text-slate-600 group-hover/log-item:text-[#9a6bff] transition-colors">{log.title}</span>
-                        <span className="text-[12px] text-slate-400 font-normal font-mono">{log.time}</span>
-                      </div>
-                    ))}
+                  <div className="pt-4 px-5 relative">
+                    {/* 时序图垂直主轴线 */}
+                    <div className="absolute left-[23px] top-6 bottom-4 w-0.5 bg-slate-100 rounded-full"></div>
+                    
+                    <div className="space-y-5">
+                      {mockLogs.map((log, idx) => {
+                        const isLatest = idx === 0;
+                        return (
+                          <div key={log.id} className="flex items-center relative pl-8 group/log">
+                            {/* 时序节点圆点 */}
+                            <div className={`absolute left-0 w-3 h-3 rounded-full border-2 bg-white transition-all z-10 ${
+                              isLatest ? 'border-primary shadow-[0_0_8px_rgba(154,107,255,0.5)] scale-110' : 'border-slate-300 group-hover/log:border-slate-400'
+                            }`}></div>
+                            
+                            <div className="flex-1 flex items-center justify-between">
+                              <span className={`text-[13px] font-medium transition-colors ${
+                                isLatest ? 'text-primary' : 'text-slate-600 group-hover/log:text-slate-900'
+                              }`}>
+                                {log.title}
+                              </span>
+                              <span className="text-[12px] text-slate-400 font-medium font-mono tabular-nums leading-none">
+                                {log.time}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -783,13 +814,13 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
       <div className="w-16 h-full border-l border-slate-100 bg-white flex flex-col items-center py-6 shrink-0 relative z-20 overflow-visible">
         <div className="flex flex-col items-center space-y-4 pb-10">
           <SidebarButton active={activeSubTab === 'personnel'} onClick={() => handleTabClick('personnel')} label="人员" icon={<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />} />
-          <SidebarButton active={activeSubTab === 'vehicle'} onClick={() => handleTabClick('vehicle')} label="车辆" icon={<path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />} />
+          <SidebarButton active={activeSubTab === 'vehicle'} onClick={() => handleTabClick('vehicle')} label="车辆" icon={<path d={VEHICLE_OUTLINE_PATH} />} />
           <SidebarButton active={activeSubTab === 'drone'} onClick={() => handleTabClick('drone')} label="无人机" icon={<path d={DRONE_PATH} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />} />
           <SidebarButton active={activeSubTab === 'hazard'} onClick={() => handleTabClick('hazard')} label="隐患" icon={<path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 16h2v2h-2zm0-6h2v4h-2z" />} />
           <SidebarButton active={activeSubTab === 'alarm'} onClick={() => handleTabClick('alarm')} label="报警" icon={<path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />} />
-          <SidebarButton active={activeSubTab === 'site'} onClick={() => handleTabClick('site')} label="工地" icon={<path d="M14 6V4h-4v2h4zM4 8v11h16V8H4zm14 9h-2V10h2v7zm-4 0h-2V10h2v7zm-4 0H8V10h2v7zM2 6h20v15H2V6z" />} />
+          <SidebarButton active={activeSubTab === 'site'} onClick={() => handleTabClick('site')} label="工地" icon={<path d={SITE_ICON_PATH} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />} />
           <SidebarButton active={activeSubTab === 'droneLeak'} onClick={() => handleTabClick('droneLeak')} label="无人机漏点" icon={<g><path d={DRONE_PATH} stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none"/><circle cx="12" cy="12" r="2" fill="currentColor" className="opacity-40" /></g>} />
-          <SidebarButton active={activeSubTab === 'vehicleLeak'} onClick={() => handleTabClick('vehicleLeak')} label="测漏车漏点" icon={<g><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/><circle cx="11" cy="11" r="2" fill="currentColor" className="opacity-40" /></g>} />
+          <SidebarButton active={activeSubTab === 'vehicleLeak'} onClick={() => handleTabClick('vehicleLeak')} label="测漏车漏点" icon={<g><path d={VEHICLE_OUTLINE_PATH} fill="none" stroke="currentColor" strokeWidth="1.5" /><circle cx="11" cy="14" r="2" fill="currentColor" className="opacity-40" /></g>} />
         </div>
         <div className="mt-auto space-y-3 pb-2 shrink-0">
           <div className="w-1 h-1 rounded-full bg-slate-300 mx-auto"></div>

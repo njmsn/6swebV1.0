@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { NavigationTab } from '../types.ts';
 
@@ -25,7 +24,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
   const [hoveredItem, setHoveredItem] = useState<NavigationTab | null>(null);
   const [favorites, setFavorites] = useState<Set<NavigationTab>>(new Set([NavigationTab.RealTime]));
 
-  // 定义所有可用的功能模块
   const allModules: NavItem[] = [
     { 
       id: NavigationTab.RealTime, 
@@ -119,8 +117,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
 
   const currentHoveredNav = navItems.find(n => n.id === hoveredItem);
   
-  // 针对深色侧边栏优化的 Logo SVG，增加了渐变和更强的明暗对比
-  const logoUrl = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 256'%3E%3Cdefs%3E%3ClinearGradient id='logoGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23ffffff;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23cbd5e1;stop-opacity:0.8' /%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23logoGrad)' d='M110 40c-35 0-66 14-88 37 18-11 39-17 61-17 66 0 120 54 120 120s-54 120-120 120c-22 0-43-6-61-17 22 23 53 37 88 37 66 0 120-54 120-120S176 40 110 40z'/%3E%3Ctext x='160' y='165' font-family='Inter, Arial, sans-serif' font-weight='900' font-size='120' fill='url(%23logoGrad)'%3EMDS%3C/text%3E%3C/svg%3E";
+  // 重绘后的 Logo SVG：包含弧形旋涡背景与斜体 MDS 文字
+  const logoUrl = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 256'%3E%3Cdefs%3E%3ClinearGradient id='logoGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:%2360a5fa;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%232563eb;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Cg fill='none' stroke='url(%23logoGrad)' stroke-width='18' stroke-linecap='round'%3E%3Cpath d='M120 50 A85 85 0 1 0 120 206' opacity='0.3' /%3E%3Cpath d='M110 80 A55 55 0 1 0 110 176' opacity='0.6' /%3E%3Cpath d='M100 110 A25 25 0 1 0 100 146' /%3E%3C/g%3E%3Ctext x='160' y='175' font-family='Arial Black, system-ui, sans-serif' font-weight='900' font-size='160' fill='url(%23logoGrad)' font-style='italic' letter-spacing='-8'%3EMDS%3C/text%3E%3C/svg%3E";
 
   return (
     <div 
@@ -131,9 +129,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
         style={{ backgroundColor: 'var(--sidebar-bg)', borderColor: 'var(--sidebar-border)' }}
         className="w-20 flex flex-col h-full rounded-none border-r shadow-2xl items-center py-6 shrink-0 relative z-[1001] transition-colors duration-300"
       >
-        {/* 顶部公司 Logo 区域 */}
         <div className="mb-10 px-1 cursor-pointer transition-all hover:scale-105 active:scale-95 group">
-          <div className="w-16 h-10 flex items-center justify-center overflow-visible" style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.3))' }}>
+          <div className="w-16 h-10 flex items-center justify-center overflow-visible" style={{ filter: 'var(--logo-filter)' }}>
             <img 
               src={logoUrl} 
               alt="MDS Logo" 
@@ -174,7 +171,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
         </nav>
       </aside>
 
-      {/* 二级菜单抽屉 - 固定宽度 460px - 层级提升至 z-[999] 以确保不被 Header 遮挡 */}
       <div 
         style={{ backgroundColor: 'var(--submenu-bg)', borderColor: 'var(--sidebar-border)' }}
         className={`absolute left-20 top-0 h-full border-r shadow-[25px_0_60px_-15px_rgba(0,0,0,0.5)] transition-all duration-300 origin-left backdrop-blur-3xl overflow-hidden z-[999] ${
@@ -184,7 +180,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
         }`}
       >
         <div className="w-[460px] h-full py-8 flex flex-col">
-          {/* 标题部分 */}
           <div className="px-6 mb-10 mt-2">
             <h4 style={{ color: 'var(--submenu-title)' }} className="text-[16px] font-black tracking-wider mb-2">
               {currentHoveredNav?.label || '模块详情'}
@@ -195,7 +190,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
             ></div>
           </div>
 
-          {/* 两列网格布局 */}
           <nav className="flex-1 px-4 grid grid-cols-2 gap-3 content-start">
             {currentHoveredNav?.subItems && currentHoveredNav.subItems.length > 0 ? (
               currentHoveredNav.subItems.map((sub) => {
@@ -215,7 +209,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                       : 'text-[var(--submenu-text)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--submenu-title)]'
                     }`}
                   >
-                    {/* 图标容器 */}
                     <div 
                       style={{ 
                         backgroundColor: isActive ? 'var(--primary-color)' : 'var(--sidebar-item-hover)',
@@ -228,7 +221,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                       {sub.icon}
                     </div>
 
-                    {/* 文字标签 - whitespace-nowrap 强制单行 */}
                     <div className="flex items-center flex-1 min-w-0 pr-1">
                       <span 
                         style={{ color: isActive ? 'var(--submenu-title)' : 'inherit' }}
@@ -238,7 +230,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                       </span>
                     </div>
 
-                    {/* 收藏星标 */}
                     {isFav && (
                       <div className="absolute top-1 right-1 text-[#fbbf24] animate-in zoom-in-50 duration-300">
                         <svg className="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24">
@@ -247,7 +238,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                       </div>
                     )}
 
-                    {/* 悬浮收藏按钮 (未收藏时) */}
                     {!isFav && (
                       <button 
                         onClick={(e) => toggleFavorite(e, sub.id)}

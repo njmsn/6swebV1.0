@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 
 export const Header: React.FC = () => {
@@ -194,12 +193,12 @@ export const Header: React.FC = () => {
         <div className="relative" ref={userMenuRef}>
           <div 
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-            className={`flex items-center space-x-3 cursor-pointer group px-3 py-1.5 rounded-2xl transition-all ${isUserMenuOpen ? 'bg-slate-50/80 shadow-inner' : 'hover:bg-slate-50/50'}`}
+            className={`flex items-center space-x-3 cursor-pointer group px-3 py-1.5 rounded-lg transition-all ${isUserMenuOpen ? 'bg-slate-50/80 shadow-inner' : 'hover:bg-slate-50/50'}`}
           >
             <div className="relative">
               <img 
                 src="https://picsum.photos/seed/admin/100/100" 
-                className="w-11 h-11 rounded-xl object-cover border border-slate-100 shadow-sm" 
+                className="w-11 h-11 rounded-lg object-cover border border-slate-100 shadow-sm" 
                 alt="Avatar" 
               />
             </div>
@@ -218,7 +217,7 @@ export const Header: React.FC = () => {
           </div>
 
           {/* 用户下拉菜单 */}
-          <div className={`absolute top-full right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.18)] border border-slate-100 py-2.5 z-[100] transition-all duration-300 origin-top-right ${
+          <div className={`absolute top-full right-0 mt-3 w-56 bg-white rounded-lg shadow-[0_20px_60px_-15px_rgba(0,0,0,0.18)] border border-slate-100 py-2.5 z-[100] transition-all duration-300 origin-top-right ${
             isUserMenuOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 -translate-y-2 pointer-events-none'
           }`}>
             <div className="py-2">

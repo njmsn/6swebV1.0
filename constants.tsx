@@ -1,4 +1,3 @@
-
 import { Personnel, MapPoint } from './types.ts';
 
 export const MOCK_PERSONNEL: Personnel[] = [
@@ -54,12 +53,50 @@ export const MOCK_PERSONNEL: Personnel[] = [
   }
 ];
 
-// 车辆图标 SVG Data URIs，匹配用户提供的 PNG 风格
-const BLUE_CAR_SVG = `data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect x='5' y='5' width='90' height='90' rx='28' fill='%23dbeafe' stroke='%233b82f6' stroke-width='2'/><path d='M28 62h44v10H28zM34 50l6-18h20l6 18z' fill='none' stroke='%233b82f6' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='38' cy='72' r='5' fill='%233b82f6'/><circle cx='62' cy='72' r='5' fill='%233b82f6'/></svg>`;
+// 无人机图标路径
+const DRONE_PATH = "M7 10h10l1.5 2.5l-1.5 2.5h-10l-1.5-2.5z M5.5 11.5l-4 1 M18.5 11.5l4 1 M1 11.5h1 M22 11.5h1 M8 10l-3-3 M16 10l3-3 M4 6.5h2 M18 6.5h2 M11 15v2a1 1 0 0 0 2 0v-2 M10 18h4";
+const DRONE_SVG = `data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='${DRONE_PATH}' stroke='%233b82f6' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='12' cy='12' r='2' fill='%233b82f6' opacity='0.3'/></svg>`;
 
-const RED_CAR_SVG = `data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect x='5' y='5' width='90' height='90' rx='28' fill='%23fee2e2' stroke='%23ef4444' stroke-width='2'/><path d='M28 62h44v10H28zM34 50l6-18h20l6 18z' fill='none' stroke='%23ef4444' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='38' cy='72' r='5' fill='%23ef4444'/><circle cx='62' cy='72' r='5' fill='%23ef4444'/></svg>`;
+export const MOCK_DRONES: Personnel[] = [
+  {
+    id: 'd1',
+    name: 'UAV-001-ALPHA',
+    role: '无人机',
+    location: '基地A',
+    progress: 45,
+    tasks: 12,
+    avatar: DRONE_SVG,
+    status: 'online'
+  },
+  {
+    id: 'd2',
+    name: 'UAV-002-BETA',
+    role: '无人机',
+    location: '基地B',
+    progress: 72,
+    tasks: 8,
+    avatar: DRONE_SVG,
+    status: 'online'
+  },
+  {
+    id: 'd3',
+    name: 'UAV-003-GAMMA',
+    role: '无人机',
+    location: '基地C',
+    progress: 15,
+    tasks: 4,
+    avatar: DRONE_SVG,
+    status: 'online'
+  }
+];
 
-const BLUE_TRUCK_SVG = `data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><rect x='5' y='5' width='90' height='90' rx='28' fill='%23dbeafe' stroke='%233b82f6' stroke-width='2'/><path d='M30 65h40v8H30zM35 65V52h18v13M53 58l10 7h7v8h-7M30 52l12-14h10l5 14' fill='none' stroke='%233b82f6' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='38' cy='73' r='5' fill='%233b82f6'/><circle cx='65' cy='73' r='5' fill='%233b82f6'/></svg>`;
+// 正面车辆图标路径
+const CAR_FRONT_PATH = "M17.34 5.97l.35 1.01c.04.11.01.24-.06.33-.07.09-.18.14-.3.14H6.67c-.12 0-.23-.05-.3-.14-.07-.09-.1-.22-.06-.33l.35-1.01c.1-.28.36-.47.66-.47h9.36c.3 0 .56.19.66.47zM19 12v7c0 .55-.45 1-1 1h-1c-.55 0-1-.45-1-1v-1H7v1c0 .55-.45 1-1 1H5c-.55 0-1-.45-1-1v-7c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2zm-4.5 2c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm-5 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z";
+
+const BLUE_CAR_SVG = `data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='${CAR_FRONT_PATH}' fill='%233b82f6'/></svg>`;
+const RED_CAR_SVG = `data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='${CAR_FRONT_PATH}' fill='%23ef4444'/></svg>`;
+const TRUCK_FRONT_PATH = "M20 10V19C20 20.1 19.1 21 18 21H17C15.9 21 15 20.1 15 19V18H9V19C9 20.1 8.1 21 7 21H6C4.9 21 4 20.1 4 19V10L3 9V7C3 5.9 3.9 5 5 5H19C20.1 5 21 5.9 21 7V9L20 10ZM18 8H6V13H18V8ZM7 15.5C7.83 15.5 8.5 14.83 8.5 14S7.83 12.5 7 12.5 5.5 13.17 5.5 14 6.17 15.5 7 15.5ZM17 15.5C17.83 15.5 18.5 14.83 18.5 14S17.83 12.5 17 12.5 15.5 13.17 15.5 14 16.17 15.5 17 15.5Z";
+const BLUE_TRUCK_SVG = `data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='${TRUCK_FRONT_PATH}' fill='%233b82f6'/></svg>`;
 
 export const MOCK_VEHICLES: Personnel[] = [
   {
@@ -90,6 +127,46 @@ export const MOCK_VEHICLES: Personnel[] = [
     progress: 40,
     tasks: 1,
     avatar: BLUE_TRUCK_SVG,
+    status: 'online'
+  }
+];
+
+export interface SiteListItem {
+  id: string;
+  name: string;
+  address: string;
+  time: string;
+  manager: string;
+  image: string;
+  status: 'online' | 'offline';
+}
+
+export const MOCK_SITES_LIST: SiteListItem[] = [
+  {
+    id: 's1',
+    name: '中南路雨水管网改造',
+    address: '南京市建邺区沙洲街道停车场',
+    time: '2025-05-22 08:30',
+    manager: '胡影',
+    image: 'https://picsum.photos/seed/s1/400/300',
+    status: 'online'
+  },
+  {
+    id: 's2',
+    name: '建邱中心桩基施工',
+    address: '南京市建邺区江东中路363号',
+    time: '2025-05-21 14:20',
+    manager: '三商',
+    image: 'https://picsum.photos/seed/s2/400/300',
+    status: 'online'
+  },
+  {
+    id: 's3',
+    name: '鼓楼北扩容工程',
+    address: '南京市鼓楼区中山路18号',
+    time: '2025-05-20 09:15',
+    manager: '王建国',
+    image: 'https://picsum.photos/seed/s3/400/300',
     status: 'online'
   }
 ];

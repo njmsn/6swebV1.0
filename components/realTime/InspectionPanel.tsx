@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MOCK_PERSONNEL, MOCK_VEHICLES } from '../../constants.tsx';
+import { MOCK_PERSONNEL, MOCK_VEHICLES, MOCK_DRONES, MOCK_SITES_LIST, SiteListItem } from '../../constants.tsx';
 
 interface InspectionPanelProps {
   isOpen: boolean;
@@ -10,7 +10,7 @@ interface InspectionPanelProps {
 }
 
 type SubTab = 'personnel' | 'vehicle' | 'drone' | 'hazard' | 'alarm' | 'site' | 'droneLeak' | 'vehicleLeak';
-type DetailTab = 'trajectory' | 'task' | 'log';
+type DetailTab = 'trajectory' | 'task' | 'alarm' | 'log';
 type SortField = 'department' | 'status';
 type SortOrder = 'asc' | 'desc' | null;
 type PickerMode = 'day' | 'month' | 'year';
@@ -34,6 +34,15 @@ interface LogRecord {
   time: string;
 }
 
+interface AlarmRecord {
+  id: string;
+  type: string;
+  time: string;
+  level: 'high' | 'medium' | 'low';
+  image: string;
+  plate: string;
+}
+
 const DRONE_PATH = `
   M7 10h10l1.5 2.5l-1.5 2.5h-10l-1.5-2.5z
   M5.5 11.5l-4 1 M18.5 11.5l4 1
@@ -42,6 +51,15 @@ const DRONE_PATH = `
   M4 6.5h2 M18 6.5h2
   M11 15v2a1 1 0 0 0 2 0v-2 M10 18h4
 `;
+
+const SITE_ICON_PATH = `M12 3a9 9 0 0 0-9 9c0 .18.01.35.03.53A4 4 0 0 1 7 16h10a4 4 0 0 1 3.97-3.47c.02-.18.03-.35.03-.53a9 9 0 0 0-9-9zM12 5v4m-4-3l1.5 2.5m6.5-2.5L14.5 9`;
+
+// 正面视角剪影路径
+const VEHICLE_SOLID_PATH = "M17.34 5.97l.35 1.01c.04.11.01.24-.06.33-.07.09-.18.14-.3.14H6.67c-.12 0-.23-.05-.3-.14-.07-.09-.1-.22-.06-.33l.35-1.01c.1-.28.36-.47.66-.47h9.36c.3 0 .56.19.66.47zM19 12v7c0 .55-.45 1-1 1h-1c-.55 0-1-.45-1-1v-1H7v1c0 .55-.45 1-1 1H5c-.55 0-1-.45-1-1v-7c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2zm-4.5 2c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm-5 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z";
+const TRUCK_SOLID_PATH = "M20 10V19C20 20.1 19.1 21 18 21H17C15.9 21 15 20.1 15 19V18H9V19C9 20.1 8.1 21 7 21H6C4.9 21 4 20.1 4 19V10L3 9V7C3 5.9 3.9 5 5 5H19C20.1 5 21 5.9 21 7V9L20 10ZM18 8H6V13H18V8ZM7 15.5C7.83 15.5 8.5 14.83 8.5 14S7.83 12.5 7 12.5 5.5 13.17 5.5 14 6.17 15.5 7 15.5ZM17 15.5C17.83 15.5 18.5 14.83 18.5 14S17.83 12.5 17 12.5 15.5 13.17 15.5 14 16.17 15.5 17 15.5Z";
+
+// 统一的报警图标 (全新美化设计的 SVG)
+const ALARM_ICON_SVG = `data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><rect width='24' height='24' rx='0' fill='%23fee2e2'/><path d='M12 7V13' stroke='%23ef4444' stroke-width='2' stroke-linecap='round'/><path d='M12 16H12.01' stroke='%23ef4444' stroke-width='2.5' stroke-linecap='round'/></svg>`;
 
 export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onToggle, onTaskClick, onViewAllTasks, onPlaybackToggle }) => {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('personnel');
@@ -56,12 +74,14 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
   
   const [isTaskPlanExpanded, setIsTaskPlanExpanded] = useState(true);
   
-  // 轨迹操作按钮选中状态
   const [selectedTrajectoryAction, setSelectedTrajectoryAction] = useState<string | null>(null);
 
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [pickerMode, setPickerMode] = useState<PickerMode>('day');
   const calendarRef = useRef<HTMLDivElement>(null);
+
+  // 记录有新内容的标签页
+  const [unreadTabs, setUnreadTabs] = useState<Set<SubTab>>(new Set(['hazard', 'alarm', 'site', 'droneLeak', 'vehicleLeak']));
   
   const getTodayDate = () => new Date();
   const formatToYMD = (date: Date) => {
@@ -224,7 +244,25 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
     setSelectedTrajectoryKeys(newSet);
   };
 
+  // 模块页签映射
+  const subTabMapping: Record<string, SubTab[]> = {
+    personnel: ['personnel', 'hazard', 'alarm', 'site'],
+    vehicle: ['vehicle', 'drone', 'droneLeak', 'vehicleLeak']
+  };
+
+  // 判断当前是否属于人员类数据
+  const isPersonnelRelated = subTabMapping.personnel.includes(activeSubTab);
+  // 判断当前是否属于无人机类数据
+  const isDroneRelated = activeSubTab === 'drone' || activeSubTab === 'droneLeak';
+
   const handleTabClick = (tab: SubTab) => {
+    // 点击后清除未读状态
+    if (unreadTabs.has(tab)) {
+      const nextUnread = new Set(unreadTabs);
+      nextUnread.delete(tab);
+      setUnreadTabs(nextUnread);
+    }
+
     if (!isOpen) {
       setActiveSubTab(tab);
       onToggle();
@@ -232,6 +270,17 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
       if (activeSubTab === tab) {
         onToggle();
       } else {
+        // 如果即将切换的模块不包含当前选中的详情页签，则回退到轨迹页签
+        const nextIsPersonnel = subTabMapping.personnel.includes(tab);
+        const nextIsDrone = tab === 'drone' || tab === 'droneLeak';
+        
+        if (nextIsPersonnel && activeDetailTab === 'alarm') {
+          setActiveDetailTab('trajectory');
+        }
+        if (nextIsDrone && activeDetailTab === 'task') {
+          setActiveDetailTab('trajectory');
+        }
+        
         setActiveSubTab(tab);
         setExpandedItemId(null); 
       }
@@ -263,16 +312,33 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
     { id: 't7', address: '天津市滨海新区MSD中心大厦', time: '01/05 17:20', status: 'pending' },
   ];
 
-  const mockLogs: LogRecord[] = [
-    { id: 'l1', title: '正常作业', time: '11:06' },
-    { id: 'l2', title: '信号恢复', time: '11:06' },
-    { id: 'l3', title: '进入监控区域', time: '11:05' },
-    { id: 'l4', title: '开始巡检', time: '11:05' },
-    { id: 'l5', title: '连接服务器', time: '11:05' },
-    { id: 'l6', title: '登录系统', time: '11:05' },
+  // 人员日志内容：解锁/锁屏/程序前台后台
+  const PERSONNEL_LOGS: LogRecord[] = [
+    { id: 'pl1', title: '程序调至前台', time: '16:29' },
+    { id: 'pl2', title: '解锁', time: '16:28' },
+    { id: 'pl3', title: '锁屏', time: '16:28' },
+    { id: 'pl4', title: '程序调至后台', time: '16:28' },
+    { id: 'pl5', title: '程序调至前台', time: '16:28' },
+    { id: 'pl6', title: '解锁', time: '16:28' },
+    { id: 'pl7', title: '锁屏', time: '16:27' },
   ];
 
-  /* begin: 通用过滤复选框样式 */
+  // 车辆日志内容：起步/停放/熄火等
+  const VEHICLE_LOGS: LogRecord[] = [
+    { id: 'vl1', title: '熄火', time: '11:06' },
+    { id: 'vl2', title: '点火', time: '10:52' },
+    { id: 'vl3', title: '熄火', time: '10:15' },
+    { id: 'vl4', title: '点火', time: '09:30' },
+    { id: 'vl5', title: '熄火', time: '09:05' },
+    { id: 'vl6', title: '点火', time: '08:45' },
+  ];
+
+  const mockAlarms: AlarmRecord[] = [
+    { id: 'a1', type: '超速报警', time: '10:45', level: 'high', image: ALARM_ICON_SVG, plate: 'UAV-A01' },
+    { id: 'a2', type: '偏离路线', time: '10:30', level: 'medium', image: ALARM_ICON_SVG, plate: 'UAV-A01' },
+    { id: 'a3', type: '低电量提醒', time: '09:15', level: 'low', image: ALARM_ICON_SVG, plate: 'UAV-A01' },
+  ];
+
   const FilterCheckbox = ({ label, checked = true }: { label: string; checked?: boolean }) => (
     <label className="flex items-center space-x-1.5 cursor-pointer group select-none">
       <div className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-all ${checked ? 'bg-[#3b82f6] text-white' : 'border border-slate-200 bg-white group-hover:border-[#3b82f6]'}`}>
@@ -285,72 +351,171 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
       <span className="text-[12px] font-normal text-slate-600 group-hover:text-slate-800 transition-colors">{label}</span>
     </label>
   );
-  /* end: 通用过滤复选框样式 */
 
   const renderItemList = (data: any[]) => (
-    <div className="flex-1 overflow-y-auto custom-scrollbar px-6 space-y-4 pb-12 pt-1 relative z-10 mt-2">
+    <div className="flex-1 overflow-y-auto custom-scrollbar px-4 space-y-1.5 pb-12 pt-1 relative z-10 mt-2">
       {data.map((item) => {
         const isExpanded = expandedItemId === item.id;
+        
+        // 工地模块特殊渲染逻辑
+        if (activeSubTab === 'site') {
+          const site = item as SiteListItem;
+          return (
+            <div 
+              key={site.id} 
+              className={`group cursor-pointer py-2.5 px-2 -mx-2 rounded-2xl transition-all duration-300 border ${
+                isExpanded 
+                  ? 'bg-white border-[#9a6bff]/20 shadow-[0_20px_50px_-12px_rgba(154,107,255,0.12)] mb-3 z-10' 
+                  : 'border-transparent hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.06)] hover:bg-slate-50/50'
+              }`}
+              onClick={() => toggleExpand(site.id)}
+            >
+              <div className="flex items-start space-x-3">
+                <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 shadow-sm border border-slate-100 mt-0.5">
+                  <img src={site.image} className="w-full h-full object-cover" alt={site.name} />
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col space-y-1">
+                  {/* 第一行：工地名称（左） + 时间（右） */}
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[14px] font-bold text-slate-800 truncate pr-4">{site.name}</h3>
+                    <span className="text-[12px] font-medium text-slate-400 font-mono tracking-tight shrink-0">
+                      {site.time.split(' ')[1] || site.time}
+                    </span>
+                  </div>
+                  
+                  {/* 第二行：工地地址（左） + 负责人（右） */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center text-[12px] text-slate-400 truncate pr-4">
+                      <svg className="w-3.5 h-3.5 mr-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      </svg>
+                      {site.address}
+                    </div>
+                    <div className="flex items-center text-[12px] font-medium text-slate-400 shrink-0">
+                      {site.manager}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {isExpanded && (
+                <div className="mt-4 border-t border-slate-50 pt-3 px-1 space-y-3.5 animate-in slide-in-from-top-2 duration-300" onClick={(e) => e.stopPropagation()}>
+                  <div className="rounded-xl overflow-hidden shadow-sm border border-slate-100/60 aspect-video mb-4">
+                    <img src={site.image} className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" />
+                  </div>
+                  
+                  <div className="space-y-3 px-1">
+                    <div className="flex items-start">
+                      <span className="text-[12px] font-bold text-slate-400 w-24 shrink-0 uppercase tracking-tight">工地名称</span>
+                      <span className="text-[13px] font-bold text-slate-800">{site.name}</span>
+                    </div>
+                    <div className="flex items-start">
+                      <span className="text-[12px] font-bold text-slate-400 w-24 shrink-0 uppercase tracking-tight">工地地址</span>
+                      <span className="text-[13px] font-medium text-slate-600 leading-relaxed">{site.address}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-[12px] font-bold text-slate-400 w-24 shrink-0 uppercase tracking-tight">时间</span>
+                      <span className="text-[13px] font-medium text-slate-600 font-mono tracking-tight">{site.time}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-[12px] font-bold text-slate-400 w-24 shrink-0 uppercase tracking-tight">负责人</span>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[11px] font-black">
+                          {site.manager.charAt(0)}
+                        </div>
+                        <span className="text-[13px] font-bold text-slate-800">{site.manager}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-2">
+                    <button className="w-full h-10 rounded-xl bg-primary/5 text-primary text-[12px] font-bold hover:bg-primary/10 transition-colors shadow-sm active:scale-[0.98]">
+                      查看工地全景
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // 其他模块（人员、车辆等）维持原有逻辑
+        const tabs: DetailTab[] = isDroneRelated 
+          ? ['trajectory', 'alarm', 'log'] 
+          : isPersonnelRelated 
+            ? ['trajectory', 'task', 'log'] 
+            : ['trajectory', 'task', 'alarm', 'log'];
+
         return (
-          /* begin: 列表项卡片通用容器样式 */
           <div 
             key={item.id} 
-            className={`group cursor-pointer p-4 -mx-2 rounded-2xl transition-all duration-300 border ${
+            className={`group cursor-pointer py-2 px-2 -mx-2 rounded-2xl transition-all duration-300 border ${
               isExpanded 
-                ? 'bg-white border-[#9a6bff]/20 shadow-[0_20px_50px_-12px_rgba(154,107,255,0.12)] mb-6 z-10' 
+                ? 'bg-white border-[#9a6bff]/20 shadow-[0_20px_50px_-12px_rgba(154,107,255,0.12)] mb-3 z-10' 
                 : 'border-transparent hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.06)] hover:bg-slate-50/50'
             }`}
             onClick={() => toggleExpand(item.id)}
           >
-            <div className="flex items-center space-x-3.5 mb-3">
+            <div className="flex items-center space-x-2 mb-1.5">
               <div className="relative shrink-0">
                 <img src={item.avatar} className="w-12 h-12 rounded-xl object-contain bg-slate-50 p-1 shadow-sm transition-transform duration-300" alt={item.name} />
                 <div className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-white rounded-full ${item.status === 'online' ? 'bg-emerald-500' : 'bg-slate-300'}`}></div>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[15px] font-bold text-slate-800 truncate">{item.name}</h3>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center text-[12px] font-bold tracking-tight">
-                      <span className="text-[#9a6bff]">1</span>
-                      <span className="mx-1 text-slate-200 font-normal">-</span>
-                      <span className="text-[#3b82f6]">35</span>
-                    </div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center space-x-1.5 flex-1 min-w-0">
+                    <h3 className={`font-bold text-slate-800 truncate shrink-0 ${isDroneRelated ? 'text-[12px] max-w-[180px]' : 'text-[14px] max-w-[150px]'}`}>
+                      {item.name}
+                    </h3>
+                    
+                    {!isDroneRelated && (
+                      <div className="w-32 relative h-[14px] bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 shadow-inner shrink-0 group-hover:border-slate-300/50 transition-colors">
+                        <div 
+                          className="h-full bg-emerald-500 transition-all duration-1000 ease-out rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                          style={{ width: `${item.progress}%` }}
+                        ></div>
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <span className="text-[12px] font-black text-black leading-none drop-shadow-[0_0_1.5px_white]">
+                            {item.progress}%
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 shrink-0">
+                    {!isDroneRelated && (
+                      <div className="flex items-center text-[12px] font-bold tracking-tight">
+                        <span className="text-[#9a6bff]">1</span>
+                        <span className="mx-1 text-slate-200 font-normal">-</span>
+                        <span className="text-[#3b82f6]">35</span>
+                      </div>
+                    )}
                     <svg className={`w-4 h-4 text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
                 </div>
-                <div className="flex items-center mt-1 text-[12px] text-slate-400 font-normal space-x-1.5">
-                  <span>{item.role}</span>
-                  <span className="text-slate-300">•</span>
-                  <div className="flex items-center truncate">
-                    <svg className="w-3.5 h-3.5 mr-1 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5" />
-                    </svg>
-                    <span className="truncate">{item.location}</span>
+                {!isDroneRelated && (
+                  <div className="flex items-center mt-1 text-[12px] text-slate-400 font-normal space-x-1.5">
+                    <span className="truncate">{item.role}</span>
+                    <span className="text-slate-300">•</span>
+                    <div className="flex items-center truncate max-w-[120px]">
+                      <svg className="w-3.5 h-3.5 mr-1 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5" />
+                      </svg>
+                      <span className="truncate">{item.location}</span>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[12px] font-normal">
-                <span className="text-slate-400">巡检任务完成度</span>
-                <span className="text-slate-800 font-medium">{item.progress}%</span>
-              </div>
-              <div className="w-full h-[3px] bg-slate-100/50 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-[#9a6bff] transition-all duration-1000 ease-out rounded-full shadow-[0_0_8px_rgba(154,107,255,0.3)]"
-                  style={{ width: `${item.progress}%` }}
-                ></div>
+                )}
               </div>
             </div>
 
             {isExpanded && (
               <div className="mt-3 border-t border-slate-50 pt-2" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-around mb-2.5 border-b border-slate-50">
-                  {(['trajectory', 'task', 'log'] as DetailTab[]).map((tab) => (
+                  {tabs.map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveDetailTab(tab)}
@@ -360,6 +525,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                     >
                       {tab === 'trajectory' && '轨迹'}
                       {tab === 'task' && '任务'}
+                      {tab === 'alarm' && '报警'}
                       {tab === 'log' && '日志'}
                       {activeDetailTab === tab && (
                         <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#9a6bff] rounded-full"></div>
@@ -369,7 +535,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                 </div>
 
                 {activeDetailTab === 'trajectory' && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 px-2">
                     <div className="bg-[#9a6bff]/5 rounded-2xl p-4 flex items-center justify-between border border-[#9a6bff]/10">
                       <div className="space-y-1">
                         <span className="text-[12px] text-[#9a6bff]/60 font-medium uppercase tracking-wider">总公里数</span>
@@ -405,7 +571,6 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                               onClick={() => {
                                 const nextAction = selectedTrajectoryAction === 'track' ? null : 'track';
                                 setSelectedTrajectoryAction(nextAction);
-                                // 回调通知开启地图播放条
                                 onPlaybackToggle?.(nextAction === 'track', item.id);
                               }}
                               className={`peer w-8 h-8 rounded-lg flex items-center justify-center transition-all border active:scale-90 z-20 relative ${selectedTrajectoryAction === 'track' ? 'bg-[#9a6bff] text-white shadow-lg shadow-[#9a6bff]/30' : 'bg-white text-slate-500 hover:bg-slate-50'}`}
@@ -429,7 +594,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                                 </div>
                                 <div className="flex items-center">
                                   <svg className="w-3.5 h-3.5 mr-2.5 text-slate-300 group-hover/line:text-[#9a6bff] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2"/></svg>
-                                  <span className={`text-[13px] font-normal ${isSelected ? 'text-slate-800' : 'text-slate-600'}`}>{traj.time}</span>
+                                  <span className={`text-[12px] font-normal ${isSelected ? 'text-slate-800' : 'text-slate-600'}`}>{traj.time}</span>
                                 </div>
                               </div>
                               <div className="flex items-center space-x-3">
@@ -444,37 +609,39 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   </div>
                 )}
 
-                {activeDetailTab === 'task' && (
-                  <div className="space-y-3.5 pt-1.5 pb-3">
-                    <div onClick={() => setIsTaskPlanExpanded(!isTaskPlanExpanded)} className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 p-2 -mx-2 rounded-lg transition-colors">
+                {activeDetailTab === 'task' && !isDroneRelated && (
+                  <div className="space-y-1.5 pt-0 pb-1.5 px-2">
+                    <div onClick={() => setIsTaskPlanExpanded(!isTaskPlanExpanded)} className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 py-1 px-2 -mx-2 rounded-lg transition-colors">
                       <span className="text-[12px] font-normal text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
-                        {activeSubTab === 'personnel' ? '用户安检' : '抢修作业'}-{item.name}{selectedDate ? selectedDate.replace(/-/g, '/') : '未选日期'}的计划
+                        {isPersonnelRelated ? '用户安检' : '抢修作业'}-{item.name}{selectedDate ? selectedDate.replace(/-/g, '/') : '未选日期'}的计划
                       </span>
                       <svg className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isTaskPlanExpanded ? 'rotate-0' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7" strokeWidth="2"/></svg>
                     </div>
                     {isTaskPlanExpanded && (
-                      <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="bg-[#fcfdfe] border border-slate-50 rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                          <div className="flex items-center space-x-6">
-                            <div className="flex flex-col"><span className="text-[12px] text-slate-400 font-normal mb-0.5">总计</span><span className="text-xl font-bold text-slate-800">48</span></div>
-                            <div className="flex flex-col"><span className="text-[12px] text-[#10b981] font-normal mb-0.5">已完成</span><span className="text-xl font-bold text-[#10b981]">32</span></div>
-                            <button 
-                              onClick={() => onViewAllTasks?.({ name: item.name, tasks: mockTasks })}
-                              className="px-4 py-1.5 bg-[#9a6bff]/5 text-[#9a6bff] rounded-full text-[12px] font-normal hover:bg-[#9a6bff]/10 transition-colors shadow-sm"
-                            >
-                              查看全部
-                            </button>
+                      <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="pl-4 pr-1 flex items-center justify-between">
+                          <div className="flex items-center space-x-12">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-[12px] text-slate-400 font-normal">总计</span>
+                              <span className="text-[12px] font-normal text-slate-800 leading-none">48</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-[12px] text-[#10b981] font-normal">已完成</span>
+                              <span className="text-[12px] font-normal text-[#10b981] leading-none">32</span>
+                            </div>
                           </div>
-                          <div className="relative w-10 h-10 flex items-center justify-center">
-                            <svg className="w-full h-full transform -rotate-90"><circle cx="20" cy="20" r="16" stroke="currentColor" strokeWidth="3" fill="transparent" className="text-emerald-500/10"/><circle cx="20" cy="20" r="16" stroke="currentColor" strokeWidth="3" strokeDasharray={100.5} strokeDashoffset={100.5 * (1 - 0.66)} strokeLinecap="round" fill="transparent" className="text-emerald-500 transition-all duration-1000"/></svg>
-                            <span className="absolute text-[12px] font-bold text-emerald-500">66%</span>
-                          </div>
+                          <button 
+                            onClick={() => onViewAllTasks?.({ name: item.name, tasks: mockTasks })}
+                            className="px-4 py-1 bg-[#9a6bff]/5 text-[#9a6bff] rounded-full text-[12px] font-normal hover:bg-[#9a6bff]/10 transition-colors shadow-sm shrink-0"
+                          >
+                            查看全部
+                          </button>
                         </div>
-                        <div className="space-y-0 border-t border-slate-50 pt-2">
+                        <div className="space-y-0 border-t border-slate-50 pt-0.5 pl-4">
                           {mockTasks.slice(0, 4).map((task) => (
                             <div 
                               key={task.id} 
-                              className="flex items-center justify-between py-2 group/task-item border-b border-slate-50/50 last:border-0 px-1 cursor-pointer hover:bg-slate-50 rounded-md transition-colors"
+                              className="flex items-center justify-between py-1.5 group/task-item border-b border-slate-50/50 last:border-0 pr-1 cursor-pointer hover:bg-slate-50 rounded-md transition-colors"
                               onClick={() => onTaskClick?.(task)}
                             >
                               <div className="flex items-center space-x-3 overflow-hidden flex-1">
@@ -490,310 +657,207 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   </div>
                 )}
 
-                {activeDetailTab === 'log' && (
-                  <div className="space-y-0 pt-1 px-1">
-                    {mockLogs.map((log) => (
-                      <div key={log.id} className="flex items-center justify-between py-2.5 border-b border-slate-50 last:border-0 group/log-item">
-                        <span className="text-[12px] font-normal text-slate-600 group-hover/log-item:text-[#9a6bff] transition-colors">{log.title}</span>
-                        <span className="text-[12px] text-slate-400 font-normal font-mono">{log.time}</span>
+                {activeDetailTab === 'alarm' && !isPersonnelRelated && (
+                  <div className="pt-2 px-3 space-y-4 pb-3">
+                    {mockAlarms.map((alarm) => (
+                      <div key={alarm.id} className="flex items-center transition-all group/alarm">
+                        <div className="relative w-12 h-12 shrink-0 rounded-none overflow-hidden border border-slate-100 mr-3.5 shadow-sm">
+                          <img src={alarm.image} className="w-full h-full object-cover transition-transform duration-500 group-hover/alarm:scale-110" alt="报警图标" />
+                          <div className={`absolute top-0 left-0 w-full h-0.5 ${
+                            alarm.level === 'high' ? 'bg-rose-500' : alarm.level === 'medium' ? 'bg-amber-500' : 'bg-blue-400'
+                          }`}></div>
+                        </div>
+                        
+                        <div className="flex-1 min-w-0 py-0.5">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span 
+                              title={alarm.type}
+                              className="text-[12px] font-bold text-slate-800 truncate max-w-[140px] pr-2 transition-colors group-hover/alarm:text-[#9a6bff]"
+                            >
+                              {alarm.type}
+                            </span>
+                            <span className="text-[12px] text-slate-400 font-mono tabular-nums transition-colors group-hover/alarm:text-slate-600 shrink-0">
+                              {alarm.time}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <div className="flex items-center space-x-1.5">
+                              <svg className="w-3.5 h-3.5 text-slate-300 group-hover/alarm:text-slate-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" strokeWidth="2" /></svg>
+                              <span className="text-[12px] font-normal text-slate-400 tracking-tight uppercase group-hover/alarm:text-slate-600 transition-colors">
+                                {isDroneRelated ? '编号: ' : ''}{alarm.plate}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ))}
+                    {mockAlarms.length === 0 && (
+                      <div className="py-8 text-center text-slate-300 text-[12px]">暂无相关报警记录</div>
+                    )}
+                  </div>
+                )}
+
+                {activeDetailTab === 'log' && (
+                  <div className="pt-4 px-5 relative pb-4">
+                    <div className="absolute left-[23px] top-5 bottom-3 w-0.5 bg-slate-100 rounded-full"></div>
+                    <div className="space-y-4">
+                      {(isPersonnelRelated ? PERSONNEL_LOGS : VEHICLE_LOGS).map((log) => {
+                        return (
+                          <div key={log.id} className="flex items-center relative pl-8 group/log">
+                            <div className="absolute left-0 w-3 h-3 rounded-full border-2 bg-white transition-all z-10 border-slate-200 group-hover/log:border-slate-400 group-hover/log:scale-110"></div>
+                            <div className="flex-1 flex items-center justify-between">
+                              <span className={`text-[12px] font-medium transition-colors text-slate-600 group-hover/log:text-slate-900`}>
+                                {log.title}
+                              </span>
+                              <span className="text-[12px] text-slate-400 font-medium font-mono tabular-nums leading-none">
+                                {log.time}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
             )}
           </div>
-          /* end: 列表项卡片通用容器样式 */
         );
       })}
     </div>
   );
 
+  // 根据 activeSubTab 决定数据源
+  const dataToRender = activeSubTab === 'personnel' ? MOCK_PERSONNEL : 
+                     isDroneRelated ? MOCK_DRONES : 
+                     activeSubTab === 'site' ? MOCK_SITES_LIST :
+                     MOCK_VEHICLES;
+
   return (
     <div className="flex h-full bg-white overflow-visible flex-row">
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-500 ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10 pointer-events-none w-0'}`}>
-        <div className="pt-4 pb-2 px-4 border-b border-slate-50 relative z-50">
-          <div className="flex items-center justify-between bg-white border border-slate-100/60 rounded-xl px-3 py-2 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] relative">
-            <button 
-              onClick={handlePrevDay}
-              className="text-slate-400 hover:text-[#7c4dff] hover:bg-slate-50 p-1 rounded-md transition-all active:scale-90"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            
-            <div 
-              onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-              className="flex items-center space-x-2.5 cursor-pointer group px-2 py-1"
-            >
-              <svg className="w-4 h-4 text-[#7c4dff] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" />
-              </svg>
-              <span className="text-[13px] font-normal text-slate-700">{formatDisplayDate(selectedDate)}</span>
-              <svg className={`w-3 h-3 text-slate-300 group-hover:text-[#7c4dff] transition-all ${isCalendarOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-
-            <button 
-              onClick={handleNextDay}
-              className="text-slate-400 hover:text-[#7c4dff] hover:bg-slate-50 p-1 rounded-md transition-all active:scale-90"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-
-            {isCalendarOpen && (
-              <div 
-                ref={calendarRef}
-                className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-slate-100 z-[100] p-4 animate-in fade-in slide-in-from-top-2 duration-200"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-center justify-between mb-4 px-1">
-                  <div className="flex items-center space-x-2">
-                    {pickerMode === 'day' ? (
-                      <div 
-                        className="flex items-center space-x-1.5 group cursor-pointer"
-                        onClick={() => setPickerMode('year')}
-                      >
-                        <span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors">
-                          {viewDate.getFullYear()}年
-                        </span>
-                        <span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors" onClick={handleMonthPickerClick}>
-                          {String(viewDate.getMonth() + 1).padStart(2, '0')}月
-                        </span>
-                        <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg>
-                      </div>
-                    ) : pickerMode === 'month' ? (
-                      <div className="flex items-center space-x-1.5 group cursor-pointer" onClick={() => setPickerMode('year')}>
-                        <span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors">
-                          {viewDate.getFullYear()}年
-                        </span>
-                        <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg>
-                      </div>
-                    ) : (
-                      <div className="flex items-center space-x-1.5">
-                        <span className="text-[14px] font-bold text-slate-800">
-                          {Math.floor(viewDate.getFullYear() / 10) * 10} - {Math.floor(viewDate.getFullYear() / 10) * 10 + 9}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <button onClick={() => changeView(-1)} className="p-1 text-slate-400 hover:text-slate-700 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2" /></svg>
-                    </button>
-                    <button onClick={() => changeView(1)} className="p-1 text-slate-400 hover:text-slate-700 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" /></svg>
-                    </button>
-                  </div>
-                </div>
-
-                {pickerMode === 'day' && (
-                  <>
-                    <div className="grid grid-cols-7 mb-2 border-b border-slate-50 pb-2">
-                      {['一', '二', '三', '四', '五', '六', '日'].map(w => (
-                        <span key={w} className="text-center text-[12px] font-normal text-slate-400">{w}</span>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-7 gap-y-1">
-                      {generateCalendarDays().map((day, idx) => {
-                        const ymd = formatToYMD(day.date);
-                        const isSelected = ymd === selectedDate;
-                        const isToday = ymd === formatToYMD(getTodayDate());
-                        return (
-                          <div 
-                            key={idx}
-                            onClick={() => handleDateSelect(day.date)}
-                            className={`aspect-square flex items-center justify-center text-[12px] font-normal rounded-lg cursor-pointer transition-all ${
-                              day.isCurrentMonth ? 'text-slate-700' : 'text-slate-200'
-                            } ${
-                              isSelected ? 'bg-[#3b82f6] text-white shadow-[0_4px_12px_rgba(59,130,246,0.3)]' : 'hover:bg-slate-50'
-                            } ${
-                              isToday && !isSelected ? 'border border-[#3b82f6] text-[#3b82f6]' : ''
-                            }`}
-                          >
-                            {day.date.getDate()}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-
-                {pickerMode === 'month' && (
-                  <div className="grid grid-cols-3 gap-x-2 gap-y-6 py-4">
-                    {['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'].map((m, idx) => {
-                      const isActive = viewDate.getMonth() === idx;
-                      return (
-                        <div 
-                          key={m}
-                          onClick={() => handleMonthSelect(idx)}
-                          className={`flex items-center justify-center py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all ${
-                            isActive ? 'bg-[#3b82f6] text-white shadow-lg' : 'text-slate-600 hover:bg-slate-50 hover:text-[#3b82f6]'
-                          }`}
-                        >
-                          {m}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {pickerMode === 'year' && (
-                  <div className="grid grid-cols-3 gap-x-2 gap-y-6 py-4">
-                    {generateYears().map((y, idx) => {
-                      const isActive = viewDate.getFullYear() === y;
-                      const isOutside = idx === 0 || idx === 11;
-                      return (
-                        <div 
-                          key={y}
-                          onClick={() => handleYearSelect(y)}
-                          className={`flex items-center justify-center py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all ${
-                            isOutside ? 'text-slate-200' : isActive ? 'bg-[#3b82f6] text-white shadow-lg' : 'text-slate-600 hover:bg-slate-50 hover:text-[#3b82f6]'
-                          }`}
-                        >
-                          {y}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-50">
-                  <button 
-                    onClick={handleClearClick}
-                    className="text-[12px] font-normal text-[#3b82f6] hover:underline px-1 transition-all"
-                  >
-                    清除
-                  </button>
-                  <button 
-                    onClick={handleTodayClick}
-                    className="text-[12px] font-normal text-[#3b82f6] hover:underline px-1 transition-all"
-                  >
-                    今天
-                  </button>
-                </div>
+        {activeSubTab !== 'site' && (
+          <div className="pt-2 pb-1 px-4 border-b border-slate-50 relative z-50">
+            <div className="flex items-center justify-between bg-white border border-slate-100/60 rounded-xl px-3 py-2 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] relative">
+              <button onClick={handlePrevDay} className="text-slate-400 hover:text-[#7c4dff] hover:bg-slate-50 p-1 rounded-md transition-all active:scale-90">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              </button>
+              <div onClick={() => setIsCalendarOpen(!isCalendarOpen)} className="flex items-center space-x-2.5 cursor-pointer group px-2 py-1">
+                <svg className="w-4 h-4 text-[#7c4dff] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" /></svg>
+                <span className="text-[13px] font-normal text-slate-700">{formatDisplayDate(selectedDate)}</span>
+                <svg className={`w-3 h-3 text-slate-300 group-hover:text-[#7c4dff] transition-all ${isCalendarOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
               </div>
-            )}
+              <button onClick={handleNextDay} className="text-slate-400 hover:text-[#7c4dff] hover:bg-slate-50 p-1 rounded-md transition-all active:scale-90">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" /></svg>
+              </button>
+
+              {isCalendarOpen && (
+                <div ref={calendarRef} className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-slate-100 z-[100] p-4 animate-in fade-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-between mb-4 px-1">
+                    <div className="flex items-center space-x-2">
+                      {pickerMode === 'day' ? (
+                        <div className="flex items-center space-x-1.5 group cursor-pointer" onClick={() => setPickerMode('year')}>
+                          <span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors">{viewDate.getFullYear()}年</span>
+                          <span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors" onClick={handleMonthPickerClick}>{String(viewDate.getMonth() + 1).padStart(2, '0')}月</span>
+                          <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-1.5 group cursor-pointer" onClick={() => setPickerMode('year')}>
+                          <span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors">{viewDate.getFullYear()}年</span>
+                          <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <button onClick={() => changeView(-1)} className="p-1 text-slate-400 hover:text-slate-700 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2" /></svg></button>
+                      <button onClick={() => changeView(1)} className="p-1 text-slate-400 hover:text-slate-700 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" /></svg></button>
+                    </div>
+                  </div>
+
+                  {pickerMode === 'day' && (
+                    <>
+                      <div className="grid grid-cols-7 mb-2 border-b border-slate-50 pb-2">
+                        {['一', '二', '三', '四', '五', '六', '日'].map(w => (<span key={w} className="text-center text-[12px] font-normal text-slate-400">{w}</span>))}
+                      </div>
+                      <div className="grid grid-cols-7 gap-y-1">
+                        {generateCalendarDays().map((day, idx) => {
+                          const ymd = formatToYMD(day.date);
+                          const isSelected = ymd === selectedDate;
+                          const isToday = ymd === formatToYMD(getTodayDate());
+                          return (
+                            <div key={idx} onClick={() => handleDateSelect(day.date)} className={`aspect-square flex items-center justify-center text-[12px] font-normal rounded-lg cursor-pointer transition-all ${day.isCurrentMonth ? 'text-slate-700' : 'text-slate-200'} ${isSelected ? 'bg-[#3b82f6] text-white shadow-[0_4px_12px_rgba(59,130,246,0.3)]' : 'hover:bg-slate-50'} ${isToday && !isSelected ? 'border border-[#3b82f6] text-[#3b82f6]' : ''}`}>
+                              {day.date.getDate()}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                  {pickerMode === 'month' && (
+                    <div className="grid grid-cols-3 gap-x-2 gap-y-6 py-4">
+                      {['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'].map((m, idx) => (<div key={m} onClick={() => handleMonthSelect(idx)} className={`flex items-center justify-center py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all ${viewDate.getMonth() === idx ? 'bg-[#3b82f6] text-white shadow-lg' : 'text-slate-600 hover:bg-slate-50 hover:text-[#3b82f6]'}`}>{m}</div>))}
+                    </div>
+                  )}
+                  {pickerMode === 'year' && (
+                    <div className="grid grid-cols-3 gap-x-2 gap-y-6 py-4">
+                      {generateYears().map((y, idx) => (<div key={y} onClick={() => handleYearSelect(y)} className={`flex items-center justify-center py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all ${(idx === 0 || idx === 11) ? 'text-slate-200' : viewDate.getFullYear() === y ? 'bg-[#3b82f6] text-white shadow-lg' : 'text-slate-600 hover:bg-slate-50 hover:text-[#3b82f6]'}`}>{y}</div>))}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-50">
+                    <button onClick={handleClearClick} className="text-[12px] font-normal text-[#3b82f6] hover:underline px-1">清除</button>
+                    <button onClick={handleTodayClick} className="text-[12px] font-normal text-[#3b82f6] hover:underline px-1">今天</button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex-1 flex flex-col min-h-0 relative">
-          <div className="px-5 mt-3 space-y-3 relative z-30">
-            <div className="flex space-x-3">
-              <div className="relative flex-1">
-                <input 
-                  type="text" 
-                  placeholder={activeSubTab === 'personnel' ? "搜索人员..." : "搜索车辆..."}
-                  className="w-full h-10 pl-10 pr-4 bg-slate-50/50 border border-slate-100 rounded-lg text-[12px] font-normal focus:ring-2 focus:ring-[#9a6bff]/20 focus:border-[#9a6bff] outline-none transition-all placeholder:text-slate-400"
-                />
-                <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+          {activeSubTab !== 'site' && (
+            <div className="px-5 mt-2 space-y-3 relative z-30">
+              <div className="flex space-x-3">
+                <div className="relative flex-1">
+                  <input type="text" placeholder={activeSubTab === 'personnel' ? "搜索人员..." : isDroneRelated ? "搜索无人机..." : "搜索车辆..."} className="w-full h-10 pl-10 pr-4 bg-slate-50/50 border border-slate-100 rounded-lg text-[12px] font-normal focus:ring-2 focus:ring-[#9a6bff]/20 focus:border-[#9a6bff] outline-none transition-all placeholder:text-slate-400" />
+                  <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </div>
+                <div className="relative" ref={filterRef}>
+                  <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={`w-10 h-10 flex items-center justify-center border rounded-lg transition-all active:scale-95 shadow-sm ${isFilterOpen ? 'bg-[#9a6bff] border-[#9a6bff] text-white' : 'bg-white border-slate-100 text-slate-500 hover:text-[#9a6bff]'}`}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                  </button>
+                  {isFilterOpen && (
+                    <div className="absolute top-full right-0 mt-2 w-[280px] bg-white border border-slate-100 rounded-xl shadow-[0_10px_30px_-5px_rgba(0,0,0,0.15)] p-4 space-y-4 z-50 transition-all duration-200 transform origin-top-right scale-100 opacity-100">
+                      <div className="flex items-start space-x-4"><span className="text-[12px] font-normal text-slate-400 shrink-0 pt-0.5">状态:</span><div className="flex flex-wrap gap-x-4 gap-y-2.5 flex-1"><FilterCheckbox label="全部" /><FilterCheckbox label="正常" /><FilterCheckbox label="离线" /></div></div>
+                    </div>
+                  )}
+                </div>
               </div>
-              
-              <div className="relative" ref={filterRef}>
-                <button 
-                  onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className={`w-10 h-10 flex items-center justify-center border rounded-lg transition-all active:scale-95 shadow-sm ${
-                    isFilterOpen ? 'bg-[#9a6bff] border-[#9a6bff] text-white' : 'bg-white border-slate-100 text-slate-500 hover:text-[#9a6bff]'
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                  </svg>
+              <div className="flex space-x-2.5 pb-1">
+                <button onClick={() => handleSortClick('department')} className={`flex-1 h-9 flex items-center justify-between px-3 border rounded-lg transition-all group ${sortField === 'department' ? 'bg-[#9a6bff]/5 border-[#9a6bff]/30' : 'bg-white border-slate-100 hover:border-[#9a6bff]/40 hover:bg-slate-50/50'}`}>
+                  <div className="flex items-center space-x-2"><svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" strokeWidth="2"/></svg><span className={`text-[12px] font-normal transition-colors ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-600 group-hover:text-slate-800'}`}>按部门</span></div>
+                  <div className={`transition-all duration-300 ${sortField === 'department' && sortOrder === 'desc' ? 'rotate-180' : ''}`}><svg className={`w-3 h-3 ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg></div>
                 </button>
-
-                {isFilterOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-[280px] bg-white border border-slate-100 rounded-xl shadow-[0_10px_30px_-5px_rgba(0,0,0,0.15)] p-4 space-y-4 z-50 transition-all duration-200 transform origin-top-right scale-100 opacity-100">
-                    <div className="flex items-start space-x-4">
-                      <span className="text-[12px] font-normal text-slate-400 shrink-0 pt-0.5">状态:</span>
-                      <div className="flex flex-wrap gap-x-4 gap-y-2.5 flex-1">
-                        <FilterCheckbox label="全部" />
-                        <FilterCheckbox label="下班" />
-                        <FilterCheckbox label="正常" />
-                        <FilterCheckbox label="信号中断" />
-                        <FilterCheckbox label="未上班" />
-                        <FilterCheckbox label="GPS异常" />
-                        <FilterCheckbox label="GPS未开" />
-                        <FilterCheckbox label="电池没电" />
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <span className="text-[12px] font-normal text-slate-400 shrink-0">类型:</span>
-                      <div className="flex flex-wrap gap-x-4 gap-y-2.5 flex-1">
-                        <FilterCheckbox label="全部" />
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <button onClick={() => handleSortClick('status')} className={`flex-1 h-9 flex items-center justify-between px-3 border rounded-lg transition-all group ${sortField === 'status' ? 'bg-[#9a6bff]/5 border-[#9a6bff]/30' : 'bg-white border-slate-100 hover:border-[#9a6bff]/40 hover:bg-slate-50/50'}`}>
+                  <div className="flex items-center space-x-2"><svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" strokeWidth="2"/></svg><span className={`text-[12px] font-normal transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-600 group-hover:text-slate-800'}`}>按状态</span></div>
+                  <div className={`transition-all duration-300 ${sortField === 'status' && sortOrder === 'desc' ? 'rotate-180' : ''}`}><svg className={`w-3 h-3 ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg></div>
+                </button>
               </div>
             </div>
-
-            <div className="flex space-x-2.5 pb-1">
-              <button 
-                onClick={() => handleSortClick('department')}
-                className={`flex-1 h-9 flex items-center justify-between px-3 border rounded-lg transition-all group ${
-                  sortField === 'department' 
-                  ? 'bg-[#9a6bff]/5 border-[#9a6bff]/30' 
-                  : 'bg-white border-slate-100 hover:border-[#9a6bff]/40 hover:bg-slate-50/50'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-                  </svg>
-                  <span className={`text-[12px] font-normal transition-colors ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-600 group-hover:text-slate-800'}`}>按部门</span>
-                </div>
-                <div className={`transition-all duration-300 ${sortField === 'department' && sortOrder === 'desc' ? 'rotate-180' : ''}`}>
-                  <svg className={`w-3 h-3 ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-300 group-hover:text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </button>
-              
-              <button 
-                onClick={() => handleSortClick('status')}
-                className={`flex-1 h-9 flex items-center justify-between px-3 border rounded-lg transition-all group ${
-                  sortField === 'status' 
-                  ? 'bg-[#9a6bff]/5 border-[#9a6bff]/30' 
-                  : 'bg-white border-slate-100 hover:border-[#9a6bff]/40 hover:bg-slate-50/50'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-                  </svg>
-                  <span className={`text-[12px] font-normal transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-600 group-hover:text-slate-800'}`}>按状态</span>
-                </div>
-                <div className={`transition-all duration-300 ${sortField === 'status' && sortOrder === 'desc' ? 'rotate-180' : ''}`}>
-                  <svg className={`w-3 h-3 ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-300 group-hover:text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {(activeSubTab === 'personnel' || activeSubTab === 'site' || activeSubTab === 'hazard' || activeSubTab === 'alarm') 
-            ? renderItemList(MOCK_PERSONNEL) 
-            : renderItemList(MOCK_VEHICLES)}
+          )}
+          {renderItemList(dataToRender)}
         </div>
       </div>
 
       <div className="w-16 h-full border-l border-slate-100 bg-white flex flex-col items-center py-6 shrink-0 relative z-20 overflow-visible">
         <div className="flex flex-col items-center space-y-4 pb-10">
           <SidebarButton active={activeSubTab === 'personnel'} onClick={() => handleTabClick('personnel')} label="人员" icon={<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />} />
-          <SidebarButton active={activeSubTab === 'vehicle'} onClick={() => handleTabClick('vehicle')} label="车辆" icon={<path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />} />
+          <SidebarButton active={activeSubTab === 'vehicle'} onClick={() => handleTabClick('vehicle')} label="车辆" icon={<path d={VEHICLE_SOLID_PATH} fill="currentColor" />} />
           <SidebarButton active={activeSubTab === 'drone'} onClick={() => handleTabClick('drone')} label="无人机" icon={<path d={DRONE_PATH} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />} />
-          <SidebarButton active={activeSubTab === 'hazard'} onClick={() => handleTabClick('hazard')} label="隐患" hasNewData icon={<path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 16h2v2h-2zm0-6h2v4h-2z" />} />
-          <SidebarButton active={activeSubTab === 'alarm'} onClick={() => handleTabClick('alarm')} label="报警" hasNewData icon={<path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />} />
-          <SidebarButton active={activeSubTab === 'site'} onClick={() => handleTabClick('site')} label="工地" hasNewData icon={<path d="M14 6V4h-4v2h4zM4 8v11h16V8H4zm14 9h-2V10h2v7zm-4 0h-2V10h2v7zm-4 0H8V10h2v7zM2 6h20v15H2V6z" />} />
-          <SidebarButton active={activeSubTab === 'droneLeak'} onClick={() => handleTabClick('droneLeak')} label="无人机漏点" hasNewData icon={<g><path d={DRONE_PATH} stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none"/><circle cx="12" cy="12" r="2" fill="currentColor" className="opacity-40" /></g>} />
-          <SidebarButton active={activeSubTab === 'vehicleLeak'} onClick={() => handleTabClick('vehicleLeak')} label="测漏车漏点" hasNewData icon={<g><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/><circle cx="11" cy="11" r="2" fill="currentColor" className="opacity-40" /></g>} />
+          <SidebarButton active={activeSubTab === 'hazard'} isFlashing={unreadTabs.has('hazard') && activeSubTab !== 'hazard'} onClick={() => handleTabClick('hazard')} label="隐患" icon={<path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 16h2v2h-2zm0-6h2v4h-2z" />} />
+          <SidebarButton active={activeSubTab === 'alarm'} isFlashing={unreadTabs.has('alarm') && activeSubTab !== 'alarm'} onClick={() => handleTabClick('alarm')} label="报警" icon={<path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />} />
+          <SidebarButton active={activeSubTab === 'site'} isFlashing={unreadTabs.has('site') && activeSubTab !== 'site'} onClick={() => handleTabClick('site')} label="工地" icon={<path d={SITE_ICON_PATH} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />} />
+          <SidebarButton active={activeSubTab === 'droneLeak'} isFlashing={unreadTabs.has('droneLeak') && activeSubTab !== 'droneLeak'} onClick={() => handleTabClick('droneLeak')} label="无人机漏点" icon={<g><path d={DRONE_PATH} stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none"/><circle cx="12" cy="12" r="2" fill="currentColor" className="opacity-40" /></g>} />
+          <SidebarButton active={activeSubTab === 'vehicleLeak'} isFlashing={unreadTabs.has('vehicleLeak') && activeSubTab !== 'vehicleLeak'} onClick={() => handleTabClick('vehicleLeak')} label="测漏车漏点" icon={<g><path d={TRUCK_SOLID_PATH} fill="currentColor" opacity="0.6" /><circle cx="12" cy="14" r="1.5" fill="white" className="opacity-90" /></g>} />
         </div>
         <div className="mt-auto space-y-3 pb-2 shrink-0">
           <div className="w-1 h-1 rounded-full bg-slate-300 mx-auto"></div>
@@ -804,28 +868,22 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
   );
 };
 
-/* begin: 侧边栏子页签按钮通用样式 */
-const SidebarButton: React.FC<{ 
-  active: boolean; 
-  onClick: () => void; 
-  icon: React.ReactNode; 
-  label: string;
-  hasNewData?: boolean; // 新增属性：是否有新数据需要提醒
-}> = ({ active, onClick, icon, label, hasNewData }) => (
+const SidebarButton: React.FC<{ active: boolean; isFlashing?: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, isFlashing, onClick, icon, label }) => (
   <div className="relative group/btn">
     <button 
-      onClick={onClick} 
-      className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all duration-300 relative z-10 
-        ${active 
+      onClick={(e) => { e.stopPropagation(); onClick(); }} 
+      className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all duration-300 relative z-10 ${
+        active 
           ? 'bg-[#9a6bff] text-white shadow-lg shadow-[#9a6bff]/30' 
-          : hasNewData 
-            ? 'bg-alert-pulse text-slate-400 hover:text-slate-600 hover:bg-slate-50/80' 
-            : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50/80'}`}
+          : isFlashing 
+            ? 'animate-alert-flash text-slate-400'
+            : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50/80'
+      }`}
     >
       <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">{icon}</svg>
-      {/* 如果有新数据且未激活，显示一个小红点增强提示 */}
-      {hasNewData && !active && (
-        <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full border border-white"></span>
+      {/* 如果有提醒，加个小红点视觉强化 */}
+      {isFlashing && !active && (
+        <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border border-white"></span>
       )}
     </button>
     <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 opacity-0 group-hover/btn:opacity-100 transition-all duration-200 translate-x-2 group-hover/btn:translate-x-0 z-[9999] pointer-events-none">
@@ -833,4 +891,3 @@ const SidebarButton: React.FC<{
     </div>
   </div>
 );
-/* end: 侧边栏子页签按钮通用样式 */
