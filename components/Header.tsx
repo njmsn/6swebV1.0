@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 
 export const Header: React.FC = () => {
@@ -5,14 +6,11 @@ export const Header: React.FC = () => {
   const [activeNotifTab, setActiveNotifTab] = useState<'通知' | '提醒'>('通知');
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // 主题色配置选项
+  // 主题色配置选项 - 仅保留紫色、蓝色和红色
   const themes = [
     { id: 'default', color: '#9a6bff', hover: '#8558eb', isLightSidebar: false },
     { id: 'blue', color: '#008fff', hover: '#007adb', isLightSidebar: true },
-    { id: 'orange', color: '#ff8333', hover: '#e67329', isLightSidebar: true },
-    { id: 'green', color: '#48c74e', hover: '#3eb043', isLightSidebar: true },
     { id: 'pink', color: '#f01260', hover: '#d11054', isLightSidebar: true },
-    { id: 'gray', color: '#757575', hover: '#636363', isLightSidebar: true },
   ];
 
   const handleThemeChange = (theme: typeof themes[0]) => {
@@ -229,8 +227,8 @@ export const Header: React.FC = () => {
                 </div>
                 <span className="text-[12px] font-bold">主题色配置</span>
               </div>
-              {/* 优化后的色块排版：使用 px-4 对称内边距并 justify-between 确保左右间距一致且排列均匀 */}
-              <div className="flex justify-between px-4 mb-1">
+              {/* 优化后的色块排版：仅保留紫色、蓝色、红色，并使用 gap 均匀排布 */}
+              <div className="flex px-4 gap-3 mb-1">
                 {themes.map((t) => (
                   <button 
                     key={t.id}

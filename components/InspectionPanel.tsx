@@ -313,12 +313,12 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   <div className="flex items-center space-x-1.5 flex-1 min-w-0">
                     <h3 className="text-[14px] font-bold text-slate-800 truncate w-[52px] shrink-0">{item.name}</h3>
                     {/* 进度条：使用黑色文字，配合极致强化的白色光晕，确保在任何背景色段上均极致清晰 */}
-                    <div className="w-32 relative h-[14px] bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 shadow-inner shrink-0 group-hover:border-slate-300/50 transition-colors">
+                    <div className="w-32 relative h-[14px] bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 shadow-inner shrink-0 group-hover:border-slate-300/50 transition-colors flex items-center justify-center">
                       <div 
-                        className="h-full bg-emerald-500 transition-all duration-1000 ease-out rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                        className="absolute left-0 h-full bg-emerald-500 transition-all duration-1000 ease-out rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]"
                         style={{ width: `${item.progress}%` }}
                       ></div>
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="relative z-10 flex items-center justify-center pointer-events-none">
                         <span className="text-[10px] font-black text-black leading-none drop-shadow-[0_0_1.5px_white] drop-shadow-[0_0_1.5px_white]">
                           {item.progress}%
                         </span>
@@ -389,7 +389,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                     </div>
                     <div className="pt-0.5">
                       <div className="flex items-center justify-between mb-3 px-1">
-                        <span className="text-[12px] font-normal text-slate-600 uppercase tracking-[0.15em] select-none">轨迹明细片段</span>
+                        <span className="text-[12px] font-normal text-slate-600 uppercase tracking-[0.15em] select-none">轨迹分段</span>
                         <div className="flex items-center space-x-2">
                           <div className="relative">
                             <button 
@@ -610,10 +610,10 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   </div>
                   <div className="flex items-center space-x-3">
                     <button onClick={() => changeView(-1)} className="p-1 text-slate-400 hover:text-slate-700 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2" /></svg>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" /></svg>
                     </button>
                     <button onClick={() => changeView(1)} className="p-1 text-slate-400 hover:text-slate-700 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" /></svg>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg>
                     </button>
                   </div>
                 </div>
