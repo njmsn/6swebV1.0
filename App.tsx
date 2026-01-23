@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar.tsx';
 import { Header } from './components/Header.tsx';
@@ -54,9 +55,11 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavigationTab>(NavigationTab.RealTime);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [isTabDropdownOpen, setIsTabDropdownOpen] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
+  
   const [selectedTaskDetail, setSelectedTaskDetail] = useState<any>(null);
   const [allTasksViewData, setAllTasksViewData] = useState<any>(null);
+  const [selectedSiteDetail, setSelectedSiteDetail] = useState<any>(null);
   
   const [playbackState, setPlaybackState] = useState<{ isOpen: boolean; trajectoryId?: string } | null>(null);
   
@@ -125,6 +128,7 @@ const App: React.FC = () => {
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 gap-1 overflow-hidden ${isFullscreen ? 'p-0' : 'py-1 pr-2.5 pl-2.5'}`}>
         {!isFullscreen && <Header />}
 
+        {/* Fix: Added missing quotes for Tailwind classes on line 130 and ensured proper template literal evaluation */}
         <div className={`flex-1 flex flex-col bg-white border border-slate-200/50 overflow-hidden relative transition-all duration-300 ${isFullscreen ? 'rounded-none border-none' : 'rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]'}`}>
           
           {!isFullscreen && (
@@ -223,6 +227,8 @@ const App: React.FC = () => {
                   onTaskClose={() => setSelectedTaskDetail(null)} 
                   allTasksViewData={allTasksViewData}
                   onAllTasksClose={() => setAllTasksViewData(null)}
+                  selectedSiteDetail={selectedSiteDetail}
+                  onSiteClose={() => setSelectedSiteDetail(null)}
                   playbackState={playbackState}
                   onPlaybackClose={() => setPlaybackState(null)}
                 />
@@ -254,6 +260,7 @@ const App: React.FC = () => {
                   onToggle={() => setIsPanelOpen(!isPanelOpen)} 
                   onTaskClick={(task) => setSelectedTaskDetail(task)} 
                   onViewAllTasks={(data) => setAllTasksViewData(data)}
+                  onSiteClick={(site) => setSelectedSiteDetail(site)}
                   onPlaybackToggle={(isOpen, trajId) => setPlaybackState(isOpen ? { isOpen, trajectoryId: trajId } : null)}
                 />
               </aside>

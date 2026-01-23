@@ -139,6 +139,8 @@ export interface SiteListItem {
   manager: string;
   image: string;
   status: 'online' | 'offline';
+  lat: number;
+  lng: number;
 }
 
 export const MOCK_SITES_LIST: SiteListItem[] = [
@@ -149,7 +151,9 @@ export const MOCK_SITES_LIST: SiteListItem[] = [
     time: '2025-05-22 08:30',
     manager: '胡影',
     image: 'https://picsum.photos/seed/s1/400/300',
-    status: 'online'
+    status: 'online',
+    lat: 39.0185,
+    lng: 117.7145
   },
   {
     id: 's2',
@@ -158,7 +162,9 @@ export const MOCK_SITES_LIST: SiteListItem[] = [
     time: '2025-05-21 14:20',
     manager: '三商',
     image: 'https://picsum.photos/seed/s2/400/300',
-    status: 'online'
+    status: 'online',
+    lat: 39.0125,
+    lng: 117.7105
   },
   {
     id: 's3',
@@ -167,7 +173,9 @@ export const MOCK_SITES_LIST: SiteListItem[] = [
     time: '2025-05-20 09:15',
     manager: '王建国',
     image: 'https://picsum.photos/seed/s3/400/300',
-    status: 'online'
+    status: 'online',
+    lat: 39.0155,
+    lng: 117.7215
   }
 ];
 

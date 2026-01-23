@@ -6,6 +6,7 @@ interface InspectionPanelProps {
   onToggle: () => void;
   onTaskClick?: (task: any) => void;
   onViewAllTasks?: (data: any) => void;
+  onSiteClick?: (site: SiteListItem) => void;
   onPlaybackToggle?: (isOpen: boolean, trajectoryId: string) => void; // 新增回调
 }
 
@@ -61,7 +62,7 @@ const TRUCK_SOLID_PATH = "M20 10V19C20 20.1 19.1 21 18 21H17C15.9 21 15 20.1 15 
 // 统一的报警图标 (全新美化设计的 SVG)
 const ALARM_ICON_SVG = `data:image/svg+xml;utf8,<svg width='100' height='100' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'><rect width='24' height='24' rx='0' fill='%23fee2e2'/><path d='M12 7V13' stroke='%23ef4444' stroke-width='2' stroke-linecap='round'/><path d='M12 16H12.01' stroke='%23ef4444' stroke-width='2.5' stroke-linecap='round'/></svg>`;
 
-export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onToggle, onTaskClick, onViewAllTasks, onPlaybackToggle }) => {
+export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onToggle, onTaskClick, onViewAllTasks, onSiteClick, onPlaybackToggle }) => {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('personnel');
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>('trajectory');
@@ -82,6 +83,8 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
 
   // 记录有新内容的标签页
   const [unreadTabs, setUnreadTabs] = useState<Set<SubTab>>(new Set(['hazard', 'alarm', 'site', 'droneLeak', 'vehicleLeak']));
+  // 记录已点击（已读）的列表项 ID
+  const [readItemIds, setReadItemIds] = useState<Set<string>>(new Set());
   
   const getTodayDate = () => new Date();
   const formatToYMD = (date: Date) => {
@@ -288,6 +291,13 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
   };
 
   const toggleExpand = (id: string) => {
+    // 标记为已读
+    setReadItemIds(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+
     if (expandedItemId !== id) {
       setExpandedItemId(id);
       setIsTaskPlanExpanded(true);
@@ -348,7 +358,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
           </svg>
         )}
       </div>
-      <span className="text-[12px] font-normal text-slate-600 group-hover:text-slate-800 transition-colors">{label}</span>
+      <span className="text-[12px] font-normal text-slate-700 group-hover:text-slate-900 transition-colors">{label}</span>
     </label>
   );
 
@@ -360,15 +370,23 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
         // 工地模块特殊渲染逻辑
         if (activeSubTab === 'site') {
           const site = item as SiteListItem;
+          const isUnread = !readItemIds.has(site.id);
+
           return (
             <div 
               key={site.id} 
               className={`group cursor-pointer py-2.5 px-2 -mx-2 rounded-2xl transition-all duration-300 border ${
                 isExpanded 
                   ? 'bg-white border-[#9a6bff]/20 shadow-[0_20px_50px_-12px_rgba(154,107,255,0.12)] mb-3 z-10' 
-                  : 'border-transparent hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.06)] hover:bg-slate-50/50'
+                  : isUnread
+                    ? 'animate-alert-flash border-transparent'
+                    : 'border-transparent hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.06)] hover:bg-slate-50/50'
               }`}
-              onClick={() => toggleExpand(site.id)}
+              onClick={() => {
+                toggleExpand(site.id);
+                // 点击时通过回调通知地图定位
+                onSiteClick?.(site);
+              }}
             >
               <div className="flex items-start space-x-3">
                 <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 shadow-sm border border-slate-100 mt-0.5">
@@ -378,21 +396,21 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   {/* 第一行：工地名称（左） + 时间（右） */}
                   <div className="flex items-center justify-between">
                     <h3 className="text-[14px] font-bold text-slate-800 truncate pr-4">{site.name}</h3>
-                    <span className="text-[12px] font-medium text-slate-400 font-mono tracking-tight shrink-0">
+                    <span className="text-[12px] font-medium text-slate-600 font-mono tracking-tight shrink-0">
                       {site.time.split(' ')[1] || site.time}
                     </span>
                   </div>
                   
                   {/* 第二行：工地地址（左） + 负责人（右） */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center text-[12px] text-slate-400 truncate pr-4">
+                    <div className="flex items-center text-[12px] text-slate-600 truncate pr-4">
                       <svg className="w-3.5 h-3.5 mr-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                       </svg>
                       {site.address}
                     </div>
-                    <div className="flex items-center text-[12px] font-medium text-slate-400 shrink-0">
+                    <div className="flex items-center text-[12px] font-medium text-slate-600 shrink-0">
                       {site.manager}
                     </div>
                   </div>
@@ -407,19 +425,19 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   
                   <div className="space-y-3 px-1">
                     <div className="flex items-start">
-                      <span className="text-[12px] font-bold text-slate-400 w-24 shrink-0 uppercase tracking-tight">工地名称</span>
+                      <span className="text-[12px] font-bold text-slate-500 w-24 shrink-0 uppercase tracking-tight">工地名称</span>
                       <span className="text-[13px] font-bold text-slate-800">{site.name}</span>
                     </div>
                     <div className="flex items-start">
-                      <span className="text-[12px] font-bold text-slate-400 w-24 shrink-0 uppercase tracking-tight">工地地址</span>
-                      <span className="text-[13px] font-medium text-slate-600 leading-relaxed">{site.address}</span>
+                      <span className="text-[12px] font-bold text-slate-500 w-24 shrink-0 uppercase tracking-tight">工地地址</span>
+                      <span className="text-[13px] font-medium text-slate-700 leading-relaxed">{site.address}</span>
                     </div>
                     <div className="flex items-center">
-                      <span className="text-[12px] font-bold text-slate-400 w-24 shrink-0 uppercase tracking-tight">时间</span>
-                      <span className="text-[13px] font-medium text-slate-600 font-mono tracking-tight">{site.time}</span>
+                      <span className="text-[12px] font-bold text-slate-500 w-24 shrink-0 uppercase tracking-tight">时间</span>
+                      <span className="text-[13px] font-medium text-slate-700 font-mono tracking-tight">{site.time}</span>
                     </div>
                     <div className="flex items-center">
-                      <span className="text-[12px] font-bold text-slate-400 w-24 shrink-0 uppercase tracking-tight">负责人</span>
+                      <span className="text-[12px] font-bold text-slate-500 w-24 shrink-0 uppercase tracking-tight">负责人</span>
                       <div className="flex items-center space-x-2">
                         <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[11px] font-black">
                           {site.manager.charAt(0)}
@@ -470,13 +488,13 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                     </h3>
                     
                     {!isDroneRelated && (
-                      <div className="w-32 relative h-[14px] bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 shadow-inner shrink-0 group-hover:border-slate-300/50 transition-colors">
+                      <div className="w-32 relative h-[14px] bg-emerald-50/30 rounded-full overflow-hidden border border-emerald-500/30 shrink-0 transition-colors">
                         <div 
-                          className="h-full bg-emerald-500 transition-all duration-1000 ease-out rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                          className="h-full bg-emerald-400/20 transition-all duration-1000 ease-out"
                           style={{ width: `${item.progress}%` }}
                         ></div>
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <span className="text-[12px] font-black text-black leading-none drop-shadow-[0_0_1.5px_white]">
+                          <span className="text-[10px] font-bold text-emerald-700 leading-none">
                             {item.progress}%
                           </span>
                         </div>
@@ -488,21 +506,21 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                     {!isDroneRelated && (
                       <div className="flex items-center text-[12px] font-bold tracking-tight">
                         <span className="text-[#9a6bff]">1</span>
-                        <span className="mx-1 text-slate-200 font-normal">-</span>
+                        <span className="mx-1 text-slate-400 font-normal">-</span>
                         <span className="text-[#3b82f6]">35</span>
                       </div>
                     )}
-                    <svg className={`w-4 h-4 text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
                 </div>
                 {!isDroneRelated && (
-                  <div className="flex items-center mt-1 text-[12px] text-slate-400 font-normal space-x-1.5">
+                  <div className="flex items-center mt-1 text-[12px] text-slate-600 font-normal space-x-1.5">
                     <span className="truncate">{item.role}</span>
-                    <span className="text-slate-300">•</span>
+                    <span className="text-slate-500">•</span>
                     <div className="flex items-center truncate max-w-[120px]">
-                      <svg className="w-3.5 h-3.5 mr-1 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3.5 h-3.5 mr-1 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5" />
                       </svg>
                       <span className="truncate">{item.location}</span>
@@ -520,7 +538,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                       key={tab}
                       onClick={() => setActiveDetailTab(tab)}
                       className={`px-4 py-1.5 text-[12px] font-medium transition-all relative ${
-                        activeDetailTab === tab ? 'text-[#9a6bff]' : 'text-slate-400 hover:text-slate-600'
+                        activeDetailTab === tab ? 'text-[#9a6bff]' : 'text-slate-500 hover:text-slate-700'
                       }`}
                     >
                       {tab === 'trajectory' && '轨迹'}
@@ -552,7 +570,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                     </div>
                     <div className="pt-0.5">
                       <div className="flex items-center justify-between mb-3 px-1">
-                        <span className="text-[12px] font-normal text-slate-600 uppercase tracking-[0.15em] select-none">轨迹明细片段</span>
+                        <span className="text-[12px] font-normal text-slate-700 uppercase tracking-[0.15em] select-none">轨迹明细片段</span>
                         <div className="flex items-center space-x-2">
                           <div className="relative">
                             <button 
@@ -593,13 +611,13 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                                   {isSelected && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" strokeWidth="3"/></svg>}
                                 </div>
                                 <div className="flex items-center">
-                                  <svg className="w-3.5 h-3.5 mr-2.5 text-slate-300 group-hover/line:text-[#9a6bff] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2"/></svg>
-                                  <span className={`text-[12px] font-normal ${isSelected ? 'text-slate-800' : 'text-slate-600'}`}>{traj.time}</span>
+                                  <svg className="w-3.5 h-3.5 mr-2.5 text-slate-500 group-hover/line:text-[#9a6bff] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2"/></svg>
+                                  <span className={`text-[12px] font-normal ${isSelected ? 'text-slate-800' : 'text-slate-700'}`}>{traj.time}</span>
                                 </div>
                               </div>
                               <div className="flex items-center space-x-3">
-                                <span className={`px-2 py-0.5 rounded text-[12px] font-normal ${isSelected ? 'bg-[#7c4dff]/10 text-[#7c4dff]' : 'bg-slate-50 text-slate-400'}`}>{traj.dist}</span>
-                                <span className="text-[12px] text-slate-400 font-normal w-12 text-right">{traj.dur}</span>
+                                <span className={`px-2 py-0.5 rounded text-[12px] font-normal ${isSelected ? 'bg-[#7c4dff]/10 text-[#7c4dff]' : 'bg-slate-50 text-slate-500'}`}>{traj.dist}</span>
+                                <span className="text-[12px] text-slate-500 font-normal w-12 text-right">{traj.dur}</span>
                               </div>
                             </div>
                           );
@@ -615,14 +633,14 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                       <span className="text-[12px] font-normal text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
                         {isPersonnelRelated ? '用户安检' : '抢修作业'}-{item.name}{selectedDate ? selectedDate.replace(/-/g, '/') : '未选日期'}的计划
                       </span>
-                      <svg className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isTaskPlanExpanded ? 'rotate-0' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7" strokeWidth="2"/></svg>
+                      <svg className={`w-4 h-4 text-slate-500 transition-transform duration-300 ${isTaskPlanExpanded ? 'rotate-0' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7" strokeWidth="2"/></svg>
                     </div>
                     {isTaskPlanExpanded && (
                       <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
                         <div className="pl-4 pr-1 flex items-center justify-between">
                           <div className="flex items-center space-x-12">
                             <div className="flex items-center space-x-2">
-                              <span className="text-[12px] text-slate-400 font-normal">总计</span>
+                              <span className="text-[12px] text-slate-500 font-normal">总计</span>
                               <span className="text-[12px] font-normal text-slate-800 leading-none">48</span>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -648,7 +666,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                                 <div className={`w-2 h-2 rounded-full shrink-0 ${task.status === 'completed' ? 'bg-[#10b981]' : 'bg-slate-300'}`}></div>
                                 <span title={task.address} className="text-[12px] font-normal text-slate-700 truncate group-hover/task-item:text-[#9a6bff] transition-colors">{task.address}</span>
                               </div>
-                              <div className="shrink-0 ml-4"><span className="text-[12px] font-normal text-slate-400 font-mono">{task.time}</span></div>
+                              <div className="shrink-0 ml-4"><span className="text-[12px] font-normal text-slate-500 font-mono">{task.time}</span></div>
                             </div>
                           ))}
                         </div>
@@ -676,14 +694,14 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                             >
                               {alarm.type}
                             </span>
-                            <span className="text-[12px] text-slate-400 font-mono tabular-nums transition-colors group-hover/alarm:text-slate-600 shrink-0">
+                            <span className="text-[12px] text-slate-500 font-mono tabular-nums transition-colors group-hover/alarm:text-slate-700 shrink-0">
                               {alarm.time}
                             </span>
                           </div>
                           <div className="flex items-center">
                             <div className="flex items-center space-x-1.5">
-                              <svg className="w-3.5 h-3.5 text-slate-300 group-hover/alarm:text-slate-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" strokeWidth="2" /></svg>
-                              <span className="text-[12px] font-normal text-slate-400 tracking-tight uppercase group-hover/alarm:text-slate-600 transition-colors">
+                              <svg className="w-3.5 h-3.5 text-slate-500 group-hover/alarm:text-slate-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" strokeWidth="2" /></svg>
+                              <span className="text-[12px] font-normal text-slate-500 tracking-tight uppercase group-hover/alarm:text-slate-700 transition-colors">
                                 {isDroneRelated ? '编号: ' : ''}{alarm.plate}
                               </span>
                             </div>
@@ -692,7 +710,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                       </div>
                     ))}
                     {mockAlarms.length === 0 && (
-                      <div className="py-8 text-center text-slate-300 text-[12px]">暂无相关报警记录</div>
+                      <div className="py-8 text-center text-slate-400 text-[12px]">暂无相关报警记录</div>
                     )}
                   </div>
                 )}
@@ -704,12 +722,12 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                       {(isPersonnelRelated ? PERSONNEL_LOGS : VEHICLE_LOGS).map((log) => {
                         return (
                           <div key={log.id} className="flex items-center relative pl-8 group/log">
-                            <div className="absolute left-0 w-3 h-3 rounded-full border-2 bg-white transition-all z-10 border-slate-200 group-hover/log:border-slate-400 group-hover/log:scale-110"></div>
+                            <div className="absolute left-0 w-3 h-3 rounded-full border-2 bg-white transition-all z-10 border-slate-300 group-hover/log:border-slate-500 group-hover/log:scale-110"></div>
                             <div className="flex-1 flex items-center justify-between">
-                              <span className={`text-[12px] font-medium transition-colors text-slate-600 group-hover/log:text-slate-900`}>
+                              <span className={`text-[12px] font-medium transition-colors text-slate-700 group-hover/log:text-slate-900`}>
                                 {log.title}
                               </span>
-                              <span className="text-[12px] text-slate-400 font-medium font-mono tabular-nums leading-none">
+                              <span className="text-[12px] text-slate-500 font-medium font-mono tabular-nums leading-none">
                                 {log.time}
                               </span>
                             </div>
@@ -739,15 +757,15 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
         {activeSubTab !== 'site' && (
           <div className="pt-2 pb-1 px-4 border-b border-slate-50 relative z-50">
             <div className="flex items-center justify-between bg-white border border-slate-100/60 rounded-xl px-3 py-2 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] relative">
-              <button onClick={handlePrevDay} className="text-slate-400 hover:text-[#7c4dff] hover:bg-slate-50 p-1 rounded-md transition-all active:scale-90">
+              <button onClick={handlePrevDay} className="text-slate-500 hover:text-[#7c4dff] hover:bg-slate-50 p-1 rounded-md transition-all active:scale-90">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
               </button>
               <div onClick={() => setIsCalendarOpen(!isCalendarOpen)} className="flex items-center space-x-2.5 cursor-pointer group px-2 py-1">
                 <svg className="w-4 h-4 text-[#7c4dff] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" /></svg>
                 <span className="text-[13px] font-normal text-slate-700">{formatDisplayDate(selectedDate)}</span>
-                <svg className={`w-3 h-3 text-slate-300 group-hover:text-[#7c4dff] transition-all ${isCalendarOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                <svg className={`w-3 h-3 text-slate-500 group-hover:text-[#7c4dff] transition-all ${isCalendarOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
               </div>
-              <button onClick={handleNextDay} className="text-slate-400 hover:text-[#7c4dff] hover:bg-slate-50 p-1 rounded-md transition-all active:scale-90">
+              <button onClick={handleNextDay} className="text-slate-500 hover:text-[#7c4dff] hover:bg-slate-50 p-1 rounded-md transition-all active:scale-90">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" /></svg>
               </button>
 
@@ -759,25 +777,25 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                         <div className="flex items-center space-x-1.5 group cursor-pointer" onClick={() => setPickerMode('year')}>
                           <span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors">{viewDate.getFullYear()}年</span>
                           <span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors" onClick={handleMonthPickerClick}>{String(viewDate.getMonth() + 1).padStart(2, '0')}月</span>
-                          <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg>
+                          <svg className="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg>
                         </div>
                       ) : (
                         <div className="flex items-center space-x-1.5 group cursor-pointer" onClick={() => setPickerMode('year')}>
                           <span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors">{viewDate.getFullYear()}年</span>
-                          <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg>
+                          <svg className="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg>
                         </div>
                       )}
                     </div>
                     <div className="flex items-center space-x-3">
-                      <button onClick={() => changeView(-1)} className="p-1 text-slate-400 hover:text-slate-700 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2" /></svg></button>
-                      <button onClick={() => changeView(1)} className="p-1 text-slate-400 hover:text-slate-700 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" /></svg></button>
+                      <button onClick={() => changeView(-1)} className="p-1 text-slate-500 hover:text-slate-700 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" strokeWidth="2" /></svg></button>
+                      <button onClick={() => changeView(1)} className="p-1 text-slate-500 hover:text-slate-700 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" /></svg></button>
                     </div>
                   </div>
 
                   {pickerMode === 'day' && (
                     <>
                       <div className="grid grid-cols-7 mb-2 border-b border-slate-50 pb-2">
-                        {['一', '二', '三', '四', '五', '六', '日'].map(w => (<span key={w} className="text-center text-[12px] font-normal text-slate-400">{w}</span>))}
+                        {['一', '二', '三', '四', '五', '六', '日'].map(w => (<span key={w} className="text-center text-[12px] font-normal text-slate-500">{w}</span>))}
                       </div>
                       <div className="grid grid-cols-7 gap-y-1">
                         {generateCalendarDays().map((day, idx) => {
@@ -785,7 +803,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                           const isSelected = ymd === selectedDate;
                           const isToday = ymd === formatToYMD(getTodayDate());
                           return (
-                            <div key={idx} onClick={() => handleDateSelect(day.date)} className={`aspect-square flex items-center justify-center text-[12px] font-normal rounded-lg cursor-pointer transition-all ${day.isCurrentMonth ? 'text-slate-700' : 'text-slate-200'} ${isSelected ? 'bg-[#3b82f6] text-white shadow-[0_4px_12px_rgba(59,130,246,0.3)]' : 'hover:bg-slate-50'} ${isToday && !isSelected ? 'border border-[#3b82f6] text-[#3b82f6]' : ''}`}>
+                            <div key={idx} onClick={() => handleDateSelect(day.date)} className={`aspect-square flex items-center justify-center text-[12px] font-normal rounded-lg cursor-pointer transition-all ${day.isCurrentMonth ? 'text-slate-700' : 'text-slate-400'} ${isSelected ? 'bg-[#3b82f6] text-white shadow-[0_4px_12px_rgba(59,130,246,0.3)]' : 'hover:bg-slate-50'} ${isToday && !isSelected ? 'border border-[#3b82f6] text-[#3b82f6]' : ''}`}>
                               {day.date.getDate()}
                             </div>
                           );
@@ -795,12 +813,12 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   )}
                   {pickerMode === 'month' && (
                     <div className="grid grid-cols-3 gap-x-2 gap-y-6 py-4">
-                      {['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'].map((m, idx) => (<div key={m} onClick={() => handleMonthSelect(idx)} className={`flex items-center justify-center py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all ${viewDate.getMonth() === idx ? 'bg-[#3b82f6] text-white shadow-lg' : 'text-slate-600 hover:bg-slate-50 hover:text-[#3b82f6]'}`}>{m}</div>))}
+                      {['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'].map((m, idx) => (<div key={m} onClick={() => handleMonthSelect(idx)} className={`flex items-center justify-center py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all ${viewDate.getMonth() === idx ? 'bg-[#3b82f6] text-white shadow-lg' : 'text-slate-700 hover:bg-slate-50 hover:text-[#3b82f6]'}`}>{m}</div>))}
                     </div>
                   )}
                   {pickerMode === 'year' && (
                     <div className="grid grid-cols-3 gap-x-2 gap-y-6 py-4">
-                      {generateYears().map((y, idx) => (<div key={y} onClick={() => handleYearSelect(y)} className={`flex items-center justify-center py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all ${(idx === 0 || idx === 11) ? 'text-slate-200' : viewDate.getFullYear() === y ? 'bg-[#3b82f6] text-white shadow-lg' : 'text-slate-600 hover:bg-slate-50 hover:text-[#3b82f6]'}`}>{y}</div>))}
+                      {generateYears().map((y, idx) => (<div key={y} onClick={() => handleYearSelect(y)} className={`flex items-center justify-center py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all ${(idx === 0 || idx === 11) ? 'text-slate-400' : viewDate.getFullYear() === y ? 'bg-[#3b82f6] text-white shadow-lg' : 'text-slate-700 hover:bg-slate-50 hover:text-[#3b82f6]'}`}>{y}</div>))}
                     </div>
                   )}
                   <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-50">
@@ -818,28 +836,28 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
             <div className="px-5 mt-2 space-y-3 relative z-30">
               <div className="flex space-x-3">
                 <div className="relative flex-1">
-                  <input type="text" placeholder={activeSubTab === 'personnel' ? "搜索人员..." : isDroneRelated ? "搜索无人机..." : "搜索车辆..."} className="w-full h-10 pl-10 pr-4 bg-slate-50/50 border border-slate-100 rounded-lg text-[12px] font-normal focus:ring-2 focus:ring-[#9a6bff]/20 focus:border-[#9a6bff] outline-none transition-all placeholder:text-slate-400" />
-                  <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  <input type="text" placeholder={activeSubTab === 'personnel' ? "搜索人员..." : isDroneRelated ? "搜索无人机..." : "搜索车辆..."} className="w-full h-10 pl-10 pr-4 bg-slate-50/50 border border-slate-100 rounded-lg text-[12px] font-normal focus:ring-2 focus:ring-[#9a6bff]/20 focus:border-[#9a6bff] outline-none transition-all placeholder:text-slate-500" />
+                  <svg className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 </div>
                 <div className="relative" ref={filterRef}>
-                  <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={`w-10 h-10 flex items-center justify-center border rounded-lg transition-all active:scale-95 shadow-sm ${isFilterOpen ? 'bg-[#9a6bff] border-[#9a6bff] text-white' : 'bg-white border-slate-100 text-slate-500 hover:text-[#9a6bff]'}`}>
+                  <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={`w-10 h-10 flex items-center justify-center border rounded-lg transition-all active:scale-95 shadow-sm ${isFilterOpen ? 'bg-[#9a6bff] border-[#9a6bff] text-white' : 'bg-white border-slate-100 text-slate-600 hover:text-[#9a6bff]'}`}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
                   </button>
                   {isFilterOpen && (
                     <div className="absolute top-full right-0 mt-2 w-[280px] bg-white border border-slate-100 rounded-xl shadow-[0_10px_30px_-5px_rgba(0,0,0,0.15)] p-4 space-y-4 z-50 transition-all duration-200 transform origin-top-right scale-100 opacity-100">
-                      <div className="flex items-start space-x-4"><span className="text-[12px] font-normal text-slate-400 shrink-0 pt-0.5">状态:</span><div className="flex flex-wrap gap-x-4 gap-y-2.5 flex-1"><FilterCheckbox label="全部" /><FilterCheckbox label="正常" /><FilterCheckbox label="离线" /></div></div>
+                      <div className="flex items-start space-x-4"><span className="text-[12px] font-normal text-slate-500 shrink-0 pt-0.5">状态:</span><div className="flex flex-wrap gap-x-4 gap-y-2.5 flex-1"><FilterCheckbox label="全部" /><FilterCheckbox label="正常" /><FilterCheckbox label="离线" /></div></div>
                     </div>
                   )}
                 </div>
               </div>
               <div className="flex space-x-2.5 pb-1">
                 <button onClick={() => handleSortClick('department')} className={`flex-1 h-9 flex items-center justify-between px-3 border rounded-lg transition-all group ${sortField === 'department' ? 'bg-[#9a6bff]/5 border-[#9a6bff]/30' : 'bg-white border-slate-100 hover:border-[#9a6bff]/40 hover:bg-slate-50/50'}`}>
-                  <div className="flex items-center space-x-2"><svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" strokeWidth="2"/></svg><span className={`text-[12px] font-normal transition-colors ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-600 group-hover:text-slate-800'}`}>按部门</span></div>
-                  <div className={`transition-all duration-300 ${sortField === 'department' && sortOrder === 'desc' ? 'rotate-180' : ''}`}><svg className={`w-3 h-3 ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg></div>
+                  <div className="flex items-center space-x-2"><svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" strokeWidth="2"/></svg><span className={`text-[12px] font-normal transition-colors ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-700 group-hover:text-slate-900'}`}>按部门</span></div>
+                  <div className={`transition-all duration-300 ${sortField === 'department' && sortOrder === 'desc' ? 'rotate-180' : ''}`}><svg className={`w-3 h-3 ${sortField === 'department' ? 'text-[#9a6bff]' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg></div>
                 </button>
                 <button onClick={() => handleSortClick('status')} className={`flex-1 h-9 flex items-center justify-between px-3 border rounded-lg transition-all group ${sortField === 'status' ? 'bg-[#9a6bff]/5 border-[#9a6bff]/30' : 'bg-white border-slate-100 hover:border-[#9a6bff]/40 hover:bg-slate-50/50'}`}>
-                  <div className="flex items-center space-x-2"><svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" strokeWidth="2"/></svg><span className={`text-[12px] font-normal transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-600 group-hover:text-slate-800'}`}>按状态</span></div>
-                  <div className={`transition-all duration-300 ${sortField === 'status' && sortOrder === 'desc' ? 'rotate-180' : ''}`}><svg className={`w-3 h-3 ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg></div>
+                  <div className="flex items-center space-x-2"><svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" strokeWidth="2"/></svg><span className={`text-[12px] font-normal transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-700 group-hover:text-slate-900'}`}>按状态</span></div>
+                  <div className={`transition-all duration-300 ${sortField === 'status' && sortOrder === 'desc' ? 'rotate-180' : ''}`}><svg className={`w-3 h-3 ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg></div>
                 </button>
               </div>
             </div>
@@ -860,8 +878,8 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
           <SidebarButton active={activeSubTab === 'vehicleLeak'} isFlashing={unreadTabs.has('vehicleLeak') && activeSubTab !== 'vehicleLeak'} onClick={() => handleTabClick('vehicleLeak')} label="测漏车漏点" icon={<g><path d={TRUCK_SOLID_PATH} fill="currentColor" opacity="0.6" /><circle cx="12" cy="14" r="1.5" fill="white" className="opacity-90" /></g>} />
         </div>
         <div className="mt-auto space-y-3 pb-2 shrink-0">
-          <div className="w-1 h-1 rounded-full bg-slate-300 mx-auto"></div>
-          <div className="w-1 h-1 rounded-full bg-slate-300 mx-auto"></div>
+          <div className="w-1 h-1 rounded-full bg-slate-400 mx-auto"></div>
+          <div className="w-1 h-1 rounded-full bg-slate-400 mx-auto"></div>
         </div>
       </div>
     </div>
@@ -876,8 +894,8 @@ const SidebarButton: React.FC<{ active: boolean; isFlashing?: boolean; onClick: 
         active 
           ? 'bg-[#9a6bff] text-white shadow-lg shadow-[#9a6bff]/30' 
           : isFlashing 
-            ? 'animate-alert-flash text-slate-400'
-            : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50/80'
+            ? 'animate-alert-flash text-slate-500'
+            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50/80'
       }`}
     >
       <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">{icon}</svg>

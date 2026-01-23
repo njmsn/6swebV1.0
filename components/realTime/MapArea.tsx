@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MOCK_MAP_POINTS } from '../../constants.tsx';
+import { MOCK_MAP_POINTS, SiteListItem } from '../../constants.tsx';
 
 declare const L: any;
 
@@ -59,7 +59,7 @@ const PlaybackControl: React.FC<{
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-6 duration-500 ease-out">
       <div className="bg-white/95 backdrop-blur-md rounded-lg border border-slate-200 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] px-3.5 py-2.5 flex items-center space-x-4 w-[900px]">
         <button onClick={onClose} className="absolute -top-2.5 -right-2.5 w-7 h-7 bg-white border border-slate-100 rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors">
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"/></svg>
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
 
         <button 
@@ -108,7 +108,7 @@ const PlaybackControl: React.FC<{
             ))}
           </div>
           <button onClick={reset} className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all" title="重置">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           </button>
         </div>
       </div>
@@ -143,11 +143,18 @@ const PopupHeader = ({ title, onClose }: { title: string, onClose: () => void })
 const PersonnelPopup: React.FC<{ person: any; position: { x: number, y: number }; onClose: () => void; }> = ({ person, position, onClose }) => {
   const [activeTab, setActiveTab] = useState('实时');
   
+  // 根据电量获取颜色类名
+  const getBatteryColorClass = (battery: number) => {
+    if (battery < 20) return 'text-rose-500'; // 低电量：红色
+    if (battery < 50) return 'text-amber-500'; // 中电量：橙色
+    return 'text-emerald-500'; // 高电量：绿色
+  };
+
   return (
     <div className="absolute bg-white rounded-2xl shadow-[0_35px_80px_-15px_rgba(0,0,0,0.3)] border border-slate-100 z-[1000] overflow-visible flex flex-col animate-in zoom-in-95 fade-in duration-500 ease-out"
       style={{ 
         width: '330px', 
-        height: '480px', 
+        height: '465px', 
         left: `${position.x}px`, 
         top: `${position.y - 28}px`, 
         transform: 'translate(-50%, -100%)' 
@@ -199,54 +206,59 @@ const PersonnelPopup: React.FC<{ person: any; position: { x: number, y: number }
               <InfoRow label="角色" value="普通巡检员" />
             </div>
             
-            <div className="mt-4 pt-4 border-t border-slate-50 pb-2">
-               {/* 第一行：进度明细 + 进度条 */}
-               <div className="flex items-center gap-3 mb-3">
-                 <span className="text-[12px] font-bold text-slate-500 uppercase tracking-tight shrink-0">进度明细</span>
-                 <div className="flex-1 relative h-[14px] bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 shadow-inner group-hover:border-slate-300/50 transition-colors">
+            <div className="mt-1.5 pt-1.5 border-t border-slate-50 pb-0.5">
+               <div className="flex items-center justify-between px-0.5 space-x-1.5">
+                 {/* 进度条：保持指定样式 */}
+                 <div className="w-[68px] relative h-[14px] bg-emerald-50/30 rounded-full overflow-hidden border border-emerald-500/40 shrink-0 transition-colors">
                    <div 
-                     className="h-full bg-emerald-500 transition-all duration-1000 ease-out rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                     className="h-full bg-emerald-500/20 transition-all duration-1000 ease-out"
                      style={{ width: `${person.progress || 0}%` }}
                    ></div>
                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                     <span className="text-[10px] font-black text-black leading-none drop-shadow-[0_0_1.5px_white]">
+                     <span className="text-[9px] font-bold text-emerald-700 leading-none">
                        {person.progress || 0}%
                      </span>
                    </div>
                  </div>
-               </div>
 
-               {/* 第二行：电池、GPS、通讯状态 */}
-               <div className="flex items-center justify-between px-0.5">
-                 {/* 电池电量 */}
-                 <div className="flex items-center space-x-1.5 shrink-0">
-                   <svg className="w-4 h-4 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                     <rect x="2" y="7" width="16" height="10" rx="2" ry="2" />
-                     <line x1="22" y1="11" x2="22" y2="13" />
+                 {/* 电池状态 */}
+                 <div className="flex items-center space-x-1 shrink-0">
+                   <svg 
+                     className={`w-[18px] h-[18px] ${getBatteryColorClass(person.battery || 0)}`} 
+                     viewBox="0 0 24 24" 
+                     fill="none" 
+                     xmlns="http://www.w3.org/2000/svg"
+                   >
+                     <rect x="2" y="7" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="2" />
+                     <path d="M20 11V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                     <rect 
+                        x="4" 
+                        y="9" 
+                        width={Math.max(1, (person.battery / 100) * 12)} 
+                        height="6" 
+                        rx="0.5" 
+                        fill="currentColor" 
+                        stroke="none"
+                        className="transition-all duration-500 ease-out"
+                     />
                    </svg>
-                   <span className="text-[12px] font-bold text-slate-600">{person.battery || 0}%</span>
+                   <span className="text-[12px] font-bold text-slate-700">{person.battery || 0}%</span>
                  </div>
                  
                  {/* GPS状态 */}
-                 <div className="flex items-center space-x-1 shrink-0">
-                    <span className="text-[11px] font-bold text-slate-400">GPS:</span>
-                    <div className="flex items-center space-x-1">
-                      <div className={`w-1.5 h-1.5 rounded-full ${person.status === 'error' ? 'bg-rose-500' : 'bg-emerald-500'}`}></div>
-                      <span className={`text-[12px] font-bold ${person.status === 'error' ? 'text-rose-500' : 'text-emerald-500'}`}>
-                        {person.status === 'error' ? '离线' : '正常'}
-                      </span>
-                    </div>
+                 <div className="flex items-center space-x-0.5 shrink-0">
+                    <span className="text-[11px] font-bold text-slate-500">GPS:</span>
+                    <span className={`text-[12px] font-bold ${person.status === 'error' ? 'text-rose-500' : 'text-emerald-600'}`}>
+                      {person.status === 'error' ? '离线' : '正常'}
+                    </span>
                  </div>
 
-                 {/* 通讯状态：修改为通讯：正常格式 */}
-                 <div className="flex items-center space-x-1 shrink-0">
-                   <span className="text-[11px] font-bold text-slate-400">通讯:</span>
-                   <div className="flex items-center space-x-1">
-                     <div className={`w-1.5 h-1.5 rounded-full ${person.status === 'error' ? 'bg-rose-500' : 'bg-emerald-500'}`}></div>
-                     <span className={`text-[12px] font-bold ${person.status === 'error' ? 'text-rose-500' : 'text-emerald-500'}`}>
-                       {person.status === 'error' ? '离线' : '正常'}
-                     </span>
-                   </div>
+                 {/* 通讯状态 */}
+                 <div className="flex items-center space-x-0.5 shrink-0">
+                   <span className="text-[11px] font-bold text-slate-500">通讯:</span>
+                   <span className={`text-[12px] font-bold ${person.status === 'error' ? 'text-rose-500' : 'text-emerald-600'}`}>
+                     {person.status === 'error' ? '离线' : '正常'}
+                   </span>
                  </div>
                </div>
             </div>
@@ -347,7 +359,79 @@ const TaskDetailPopup: React.FC<{ task: any; onClose: () => void; }> = ({ task, 
       <div className="flex-1 overflow-y-auto p-6 min-h-[280px]">
         {activeTab === '信息' && (<div><InfoRow label="任务编号" value={`T-${task.id.toUpperCase()}`} /><InfoRow label="地理位置" value={task.address} /><InfoRow label="负责人" value="王力宏" /></div>)}
         {activeTab === '图片' && (<div className="grid grid-cols-4 gap-2">{photoGroups[0].photos.map(p => (<img key={p.id} src={p.url} className="w-full h-12 rounded bg-slate-50 object-cover" />))}</div>)}
-        {activeTab === '回报' && (<div className="space-y-4">{reportLogs.map(l => (<div key={l.id} className="text-[12px]">{l.status} - {l.time}</div>))}</div>)}
+        {activeTab === '回报' && (<div className="space-y-4">{reportLogs.map(l => (<div key={l.id} className="text-[12px] font-normal leading-relaxed">{l.status} - {l.time}</div>))}</div>)}
+      </div>
+    </div>
+  );
+};
+
+// 工地详情弹窗组件
+const SiteDetailPopup: React.FC<{ site: SiteListItem; onClose: () => void; }> = ({ site, onClose }) => {
+  const [activeTab, setActiveTab] = useState('信息');
+  const photoGroups = [{ id: 1, url: site.image }, { id: 2, url: 'https://picsum.photos/seed/site-extra/400/300' }];
+  
+  return (
+    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-[0_40px_100px_-20px_rgba(0,0,0,0.25)] border border-slate-100 z-[2000] w-[380px] overflow-hidden flex flex-col animate-in zoom-in-95 fade-in duration-300">
+      <div className="h-14 px-6 flex items-center justify-between border-b border-slate-50 bg-slate-50/30">
+        <div className="flex items-center space-x-2.5"><div className="w-1 h-4 bg-primary rounded-full"></div><span className="text-[13px] text-slate-700 font-bold">信息查看</span></div>
+        <button onClick={onClose} className="text-slate-300 hover:text-rose-500 transition-all p-1.5 rounded-xl"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeWidth="2"/></svg></button>
+      </div>
+      <div className="px-6 pt-4 pb-1 overflow-x-auto custom-scrollbar">
+        <div className="flex space-x-6 border-b border-slate-100 min-w-max">
+          {['信息', '历史', '图片', '回报', '检查'].map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`pb-3 text-[13px] font-bold relative transition-colors ${activeTab === tab ? 'text-primary' : 'text-slate-400 hover:text-slate-600'}`}>
+              {tab}
+              {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"></div>}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto p-6 min-h-[320px] custom-scrollbar">
+        {activeTab === '信息' && (
+          <div className="space-y-1 animate-in fade-in duration-300">
+            <InfoRow label="工地名称" value={site.name} isBoldValue />
+            <InfoRow label="地理位置" value={site.address} />
+            <InfoRow label="负责人" value={site.manager} />
+            <InfoRow label="巡检时间" value={site.time} />
+            <InfoRow label="在线状态" value={site.status === 'online' ? '在线' : '离线'} />
+          </div>
+        )}
+        {activeTab === '历史' && (
+          <div className="space-y-4 animate-in fade-in duration-300">
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <div className="text-[12px] text-slate-400 mb-1">2025/05/22 08:30</div>
+              <div className="text-[13px] text-slate-700 font-medium">张扬完成了例行安全巡检</div>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <div className="text-[12px] text-slate-400 mb-1">2025/05/21 14:20</div>
+              <div className="text-[13px] text-slate-700 font-medium">系统自动标记该点位为关注工地</div>
+            </div>
+          </div>
+        )}
+        {activeTab === '图片' && (
+          <div className="grid grid-cols-2 gap-3 animate-in fade-in duration-300">
+            {photoGroups.map(p => (
+              <img key={p.id} src={p.url} className="w-full h-24 rounded-xl bg-slate-50 object-cover shadow-sm border border-slate-100 hover:scale-105 transition-transform cursor-zoom-in" />
+            ))}
+          </div>
+        )}
+        {activeTab === '回报' && (
+          <div className="space-y-3 animate-in fade-in duration-300">
+            <div className="flex items-center space-x-3 text-[13px] text-slate-600">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+              <span>巡检记录回报正常</span>
+            </div>
+            <div className="text-[12px] text-slate-400 ml-4 font-mono">回报人：{site.manager} | 时间：{site.time}</div>
+          </div>
+        )}
+        {activeTab === '检查' && (
+          <div className="py-12 flex flex-col items-center justify-center animate-in fade-in duration-500">
+            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 text-slate-200">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            </div>
+            <span className="text-[13px] font-bold text-slate-300 tracking-widest uppercase">暂无检查项目</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -358,6 +442,8 @@ export interface MapAreaProps {
   onTaskClose?: () => void;
   allTasksViewData?: any;
   onAllTasksClose?: () => void;
+  selectedSiteDetail?: SiteListItem | null;
+  onSiteClose?: () => void;
   playbackState?: { isOpen: boolean; trajectoryId?: string } | null;
   onPlaybackClose?: () => void;
 }
@@ -367,6 +453,8 @@ export const MapArea: React.FC<MapAreaProps> = ({
   onTaskClose, 
   allTasksViewData, 
   onAllTasksClose,
+  selectedSiteDetail,
+  onSiteClose,
   playbackState,
   onPlaybackClose 
 }) => {
@@ -408,6 +496,13 @@ export const MapArea: React.FC<MapAreaProps> = ({
       ]
     }
   ]);
+
+  // 当外部传入工地详情时，定位地图
+  useEffect(() => {
+    if (selectedSiteDetail && mapRef.current) {
+      mapRef.current.setView([selectedSiteDetail.lat, selectedSiteDetail.lng], 16, { animate: true });
+    }
+  }, [selectedSiteDetail]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -532,6 +627,11 @@ export const MapArea: React.FC<MapAreaProps> = ({
       {/* 任务详情弹窗 */}
       {selectedTaskDetail && (
         <TaskDetailPopup task={selectedTaskDetail} onClose={() => onTaskClose?.()} />
+      )}
+
+      {/* 工地详情弹窗：样式同任务详情 */}
+      {selectedSiteDetail && (
+        <SiteDetailPopup site={selectedSiteDetail} onClose={() => onSiteClose?.()} />
       )}
 
       {/* “查看全部”任务列表弹窗 */}
