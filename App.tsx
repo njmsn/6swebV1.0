@@ -7,6 +7,100 @@ import { InspectionPanel } from './components/realTime/InspectionPanel.tsx';
 import { SiteManagementContent } from './components/dataMain/SiteManagementContent.tsx';
 import { NavigationTab } from './types.ts';
 
+// 全局大图预览组件
+const ImagePreviewer: React.FC<{ 
+  urls: string[]; 
+  initialIndex: number; 
+  onClose: () => void 
+}> = ({ urls, initialIndex, onClose }) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const showPrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex(prev => (prev > 0 ? prev - 1 : urls.length - 1));
+  };
+
+  const showNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex(prev => (prev + 1) % urls.length);
+  };
+
+  useEffect(() => {
+    const activeThumb = scrollContainerRef.current?.children[currentIndex] as HTMLElement;
+    if (activeThumb && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const scrollLeft = activeThumb.offsetLeft - container.offsetWidth / 2 + activeThumb.offsetWidth / 2;
+      container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+    }
+  }, [currentIndex]);
+
+  return (
+    <div 
+      className="fixed inset-0 z-[99999] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-300"
+      onClick={onClose}
+    >
+      <div className="absolute top-0 inset-x-0 h-16 flex items-center justify-between px-8 bg-gradient-to-b from-black/60 to-transparent pointer-events-none z-50">
+        <span className="text-white font-mono text-[15px] font-bold pointer-events-auto">
+          {currentIndex + 1} / {urls.length}
+        </span>
+        <button 
+          className="text-white/60 hover:text-white transition-all p-2 pointer-events-auto hover:bg-white/10 rounded-full"
+          onClick={onClose}
+        >
+          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <button 
+        onClick={showPrev}
+        className="absolute left-8 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all group active:scale-90 z-[60]"
+      >
+        <svg className="w-10 h-10 opacity-40 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7"/></svg>
+      </button>
+
+      <button 
+        onClick={showNext}
+        className="absolute right-8 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-all group active:scale-90 z-[60]"
+      >
+        <svg className="w-10 h-10 opacity-40 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7"/></svg>
+      </button>
+
+      <div className="flex-1 w-full flex items-center justify-center p-4 relative z-40" onClick={(e) => e.stopPropagation()}>
+        <img 
+          key={currentIndex} 
+          src={urls[currentIndex]} 
+          className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-[0_40px_120px_rgba(0,0,0,0.8)] select-none animate-in zoom-in-95 duration-500" 
+          alt="预览大图" 
+        />
+      </div>
+
+      <div className="w-full max-w-[1200px] h-24 mb-10 px-10 flex items-center justify-center pointer-events-none z-50">
+        <div 
+          ref={scrollContainerRef}
+          className="flex space-x-3 overflow-x-auto custom-scrollbar p-2 pointer-events-auto snap-x"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {urls.map((url, idx) => (
+            <div 
+              key={idx}
+              onClick={() => setCurrentIndex(idx)}
+              className={`relative shrink-0 w-16 h-16 rounded-lg overflow-hidden cursor-pointer transition-all snap-center border-2 ${
+                currentIndex === idx 
+                ? 'border-primary scale-110 shadow-lg shadow-primary/20 ring-4 ring-primary/10' 
+                : 'border-transparent opacity-40 hover:opacity-100 hover:border-white/50'
+              }`}
+            >
+              <img src={url} className="w-full h-full object-cover" alt={`缩略图 ${idx + 1}`} />
+              {currentIndex === idx && <div className="absolute inset-0 bg-primary/10"></div>}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const TAB_METADATA: Record<string, { label: string; icon: React.ReactNode }> = {
   [NavigationTab.RealTime]: {
     label: '实时监控中心',
@@ -60,9 +154,11 @@ const App: React.FC = () => {
   const [selectedTaskDetail, setSelectedTaskDetail] = useState<any>(null);
   const [allTasksViewData, setAllTasksViewData] = useState<any>(null);
   const [selectedSiteDetail, setSelectedSiteDetail] = useState<any>(null);
-  
   const [playbackState, setPlaybackState] = useState<{ isOpen: boolean; trajectoryId?: string } | null>(null);
   
+  // 全局预览状态
+  const [globalPreview, setGlobalPreview] = useState<{ urls: string[], index: number } | null>(null);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -88,14 +184,12 @@ const App: React.FC = () => {
   const handleCloseTab = (tabId: NavigationTab, e: React.MouseEvent) => {
     e.stopPropagation(); 
     if (openTabs.length <= 1) return;
+    const closedIndex = openTabs.findIndex(tab => tab.id === tabId);
     const newTabs = openTabs.filter(tab => tab.id !== tabId);
     setOpenTabs(newTabs);
     if (activeTab === tabId) {
-      const closedIndex = openTabs.findIndex(tab => tab.id === tabId);
       const nextActiveTab = newTabs[closedIndex - 1] || newTabs[0];
-      if (nextActiveTab) {
-        setActiveTab(nextActiveTab.id);
-      }
+      if (nextActiveTab) setActiveTab(nextActiveTab.id);
     }
   };
 
@@ -111,6 +205,15 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-[#f1f3f6] overflow-hidden font-sans">
+      {/* 预览大图模态层 - 置于最顶层 */}
+      {globalPreview && (
+        <ImagePreviewer 
+          urls={globalPreview.urls} 
+          initialIndex={globalPreview.index} 
+          onClose={() => setGlobalPreview(null)} 
+        />
+      )}
+
       {!isFullscreen && (
         <Sidebar activeTab={activeTab} onTabChange={(tabId) => {
           const isAlreadyOpen = openTabs.some(t => t.id === tabId);
@@ -128,37 +231,42 @@ const App: React.FC = () => {
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 gap-1 overflow-hidden ${isFullscreen ? 'p-0' : 'py-1 pr-2.5 pl-2.5'}`}>
         {!isFullscreen && <Header />}
 
-        {/* Fix: Added missing quotes for Tailwind classes on line 130 and ensured proper template literal evaluation */}
         <div className={`flex-1 flex flex-col bg-white border border-slate-200/50 overflow-hidden relative transition-all duration-300 ${isFullscreen ? 'rounded-none border-none' : 'rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)]'}`}>
-          
           {!isFullscreen && (
             <div className="h-12 border-b border-slate-100 flex items-center justify-between px-4 bg-[#fcfdfe] shrink-0">
               <div className="flex items-center h-full">
                 <div className="flex items-center h-full pt-2">
-                  {openTabs.map((tab) => (
-                    <div 
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`group flex items-center h-full px-4 rounded-t-xl transition-all cursor-pointer border-t border-x relative -mb-[1px] ${
-                        activeTab === tab.id 
-                        ? 'bg-white border-slate-100 text-primary z-10 shadow-[0_-2px_10px_-4px_rgba(0,0,0,0.05)]' 
-                        : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'
-                      }`}
-                    >
-                      <span className={`mr-2 transition-colors ${activeTab === tab.id ? 'text-primary' : 'text-slate-300'}`}>
-                        {tab.icon}
-                      </span>
-                      <span className="text-[12px] font-bold whitespace-nowrap">{tab.label}</span>
-                      <button 
-                        onClick={(e) => handleCloseTab(tab.id, e)}
-                        className={`ml-3 p-0.5 hover:bg-slate-100 rounded-full transition-opacity ${activeTab === tab.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'}`}
+                  {openTabs.map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <div 
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`group flex items-center h-full px-4 rounded-t-xl transition-all cursor-pointer border-t border-x relative -mb-[1px] ${
+                          isActive 
+                          ? 'bg-white border-slate-100 text-primary z-10 shadow-[0_-4px_10px_-2px_rgba(0,0,0,0.03)]' 
+                          : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'
+                        }`}
                       >
-                        <svg className="w-3.3 h-3.3 text-slate-300 hover:text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
+                        <span className={`mr-2.5 transition-colors ${isActive ? 'text-primary' : 'text-slate-300'}`}>
+                          {tab.icon}
+                        </span>
+                        <span className={`text-[12.5px] whitespace-nowrap transition-colors ${isActive ? 'font-black' : 'font-bold'}`}>
+                          {tab.label}
+                        </span>
+                        <button 
+                          onClick={(e) => handleCloseTab(tab.id, e)}
+                          className={`ml-2.5 w-4.5 h-4.5 flex items-center justify-center rounded-full hover:bg-slate-100 transition-all duration-200 ${
+                            isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                          }`}
+                        >
+                          <svg className={`w-3 h-3 ${isActive ? 'text-primary/40 hover:text-rose-500' : 'text-slate-300 hover:text-rose-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -180,7 +288,7 @@ const App: React.FC = () => {
                   isTabDropdownOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
                 }`}>
                   <div className="px-3 py-1 mb-1 border-b border-slate-50">
-                    <span className="text-[12px] font-black text-slate-300 uppercase tracking-widest">已打开的页签</span>
+                    <span className="text-[11px] font-black text-slate-300 uppercase tracking-widest">视图管理</span>
                   </div>
                   {openTabs.map((tab) => (
                     <button
@@ -199,19 +307,6 @@ const App: React.FC = () => {
                         {tab.icon}
                       </span>
                       <span className="text-[12px] font-bold flex-1">{tab.label}</span>
-                      <div className="flex items-center">
-                        {activeTab === tab.id && (
-                          <div className="w-1 h-1 bg-primary rounded-full mr-2"></div>
-                        )}
-                        <div 
-                          onClick={(e) => handleCloseTab(tab.id, e)}
-                          className="p-1 opacity-0 group-hover:opacity-100 hover:bg-slate-200 rounded transition-all"
-                        >
-                          <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </div>
-                      </div>
                     </button>
                   ))}
                 </div>
@@ -231,6 +326,7 @@ const App: React.FC = () => {
                   onSiteClose={() => setSelectedSiteDetail(null)}
                   playbackState={playbackState}
                   onPlaybackClose={() => setPlaybackState(null)}
+                  onPreviewImage={(urls, idx) => setGlobalPreview({ urls, index: idx })}
                 />
               ) : activeTab === NavigationTab.SiteManagement ? (
                 <SiteManagementContent />
@@ -262,6 +358,7 @@ const App: React.FC = () => {
                   onViewAllTasks={(data) => setAllTasksViewData(data)}
                   onSiteClick={(site) => setSelectedSiteDetail(site)}
                   onPlaybackToggle={(isOpen, trajId) => setPlaybackState(isOpen ? { isOpen, trajectoryId: trajId } : null)}
+                  onPreviewImage={(urls, idx) => setGlobalPreview({ urls, index: idx })}
                 />
               </aside>
             )}

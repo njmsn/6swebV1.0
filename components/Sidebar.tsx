@@ -117,7 +117,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
 
   const currentHoveredNav = navItems.find(n => n.id === hoveredItem);
   
-  // 重绘后的 Logo SVG：包含弧形旋涡背景与斜体 MDS 文字
   const logoUrl = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 256'%3E%3Cdefs%3E%3ClinearGradient id='logoGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:%2360a5fa;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%232563eb;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Cg fill='none' stroke='url(%23logoGrad)' stroke-width='18' stroke-linecap='round'%3E%3Cpath d='M120 50 A85 85 0 1 0 120 206' opacity='0.3' /%3E%3Cpath d='M110 80 A55 55 0 1 0 110 176' opacity='0.6' /%3E%3Cpath d='M100 110 A25 25 0 1 0 100 146' /%3E%3C/g%3E%3Ctext x='160' y='175' font-family='Arial Black, system-ui, sans-serif' font-weight='900' font-size='160' fill='url(%23logoGrad)' font-style='italic' letter-spacing='-8'%3EMDS%3C/text%3E%3C/svg%3E";
 
   return (
@@ -150,11 +149,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                 className="relative w-full flex justify-center group"
               >
                 <button
-                  style={{ backgroundColor: isActive ? (isFavIcon ? '#fbbf24' : 'var(--primary-color)') : 'transparent' }}
+                  style={{ 
+                    color: isActive 
+                      ? (isFavIcon ? '#fbbf24' : 'var(--primary-color)') 
+                      : undefined
+                  }}
                   className={`relative z-50 w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-300 ${
                     isActive
-                      ? `text-white ${isFavIcon ? 'shadow-[0_8px_20px_-4px_rgba(251,191,36,0.4)]' : 'shadow-[0_8px_20px_-4px_rgba(var(--primary-color),0.4)]'}` 
-                      : `hover:bg-[var(--sidebar-item-hover)] ${isFavIcon ? 'text-slate-500 hover:text-[#fbbf24]' : 'text-[var(--sidebar-text)] hover:text-primary'}`
+                      ? `scale-110` 
+                      : `text-[var(--sidebar-text)] ${isFavIcon ? 'hover:text-[#fbbf24]' : 'hover:text-primary'}`
                   }`}
                 >
                   {item.icon}
@@ -199,23 +202,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                   <div
                     key={sub.id}
                     onClick={() => onTabChange(sub.id)}
-                    style={{ 
-                      backgroundColor: isActive ? 'var(--submenu-item-active)' : 'transparent',
-                      borderColor: isActive ? 'var(--sidebar-border)' : 'transparent'
-                    }}
                     className={`flex flex-row items-center px-3 py-4 rounded-xl transition-all group/sub cursor-pointer relative border ${
                       isActive 
-                      ? 'shadow-xl' 
-                      : 'text-[var(--submenu-text)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--submenu-title)]'
+                      ? 'shadow-xl bg-[var(--submenu-item-active)] border-[var(--sidebar-border)]' 
+                      : 'border-transparent text-[var(--submenu-text)] hover:shadow-xl hover:bg-[var(--submenu-item-active)] hover:border-[var(--sidebar-border)] hover:text-[var(--submenu-title)]'
                     }`}
                   >
                     <div 
-                      style={{ 
-                        backgroundColor: isActive ? 'var(--primary-color)' : 'var(--sidebar-item-hover)',
-                        color: isActive ? 'white' : 'var(--sidebar-text)'
-                      }}
                       className={`w-10 h-10 shrink-0 rounded-lg flex items-center justify-center mr-3 transition-all ${
-                        isActive ? 'shadow-[0_5px_15px_rgba(var(--primary-color),0.3)]' : 'group-hover/sub:bg-[var(--submenu-item-active)]'
+                        isActive 
+                        ? 'scale-110 text-[var(--primary-color)]' 
+                        : 'text-[var(--sidebar-text)] group-hover/sub:scale-110 group-hover/sub:text-[var(--primary-color)]'
                       }`}
                     >
                       {sub.icon}
@@ -223,8 +220,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
 
                     <div className="flex items-center flex-1 min-w-0 pr-1">
                       <span 
-                        style={{ color: isActive ? 'var(--submenu-title)' : 'inherit' }}
-                        className="text-[14px] font-black tracking-tight whitespace-nowrap"
+                        className={`text-[14px] font-black tracking-tight whitespace-nowrap transition-colors ${
+                          isActive ? 'text-[var(--submenu-title)]' : 'group-hover/sub:text-[var(--submenu-title)]'
+                        }`}
                       >
                         {sub.label}
                       </span>

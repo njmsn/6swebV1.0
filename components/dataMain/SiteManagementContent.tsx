@@ -23,6 +23,7 @@ const MOCK_SITES: SiteRecord[] = [
 
 export const SiteManagementContent: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(['1']));
+  const [activeRightTab, setActiveRightTab] = useState('group');
 
   const toggleSelect = (id: string) => {
     const newSet = new Set(selectedIds);
@@ -190,13 +191,19 @@ export const SiteManagementContent: React.FC = () => {
         {/* 右侧：固定导航栏卡片 */}
         <div className="w-14 bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center py-4 shrink-0">
           <div className="flex flex-col items-center space-y-4">
-            <button className="w-10 h-10 rounded-xl bg-[#9a6bff] text-white shadow-lg shadow-[#9a6bff]/30 flex items-center justify-center transition-all active:scale-95">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <button 
+              onClick={() => setActiveRightTab('group')}
+              className={`w-10 h-10 flex items-center justify-center transition-all active:scale-95 ${activeRightTab === 'group' ? 'text-[#9a6bff] scale-110' : 'text-slate-300 hover:text-slate-500'}`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
               </svg>
             </button>
-            <button className="w-10 h-10 rounded-xl text-slate-300 hover:text-slate-500 hover:bg-slate-50 flex items-center justify-center transition-all active:scale-95">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <button 
+              onClick={() => setActiveRightTab('car')}
+              className={`w-10 h-10 flex items-center justify-center transition-all active:scale-95 ${activeRightTab === 'car' ? 'text-[#9a6bff] scale-110' : 'text-slate-300 hover:text-slate-500'}`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125-1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.806H8.002c-.822 0-1.585.391-2.074 1.047l-2.623 3.525a1.214 1.214 0 01-.673.465m0 0A1.23 1.23 0 003.375 14.25h15.75" />
               </svg>
             </button>
