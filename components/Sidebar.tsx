@@ -121,12 +121,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
 
   return (
     <div 
-      className="relative z-[1000] flex h-full"
+      className="relative z-[100000] flex h-full"
       onMouseLeave={() => setHoveredItem(null)}
     >
       <aside 
         style={{ backgroundColor: 'var(--sidebar-bg)', borderColor: 'var(--sidebar-border)' }}
-        className="w-20 flex flex-col h-full rounded-none border-r shadow-2xl items-center py-6 shrink-0 relative z-[1001] transition-colors duration-300"
+        className="w-20 flex flex-col h-full rounded-none border-r shadow-2xl items-center py-6 shrink-0 relative z-[100001] transition-colors duration-300"
       >
         <div className="mb-10 px-1 cursor-pointer transition-all hover:scale-105 active:scale-95 group">
           <div className="w-16 h-10 flex items-center justify-center overflow-visible" style={{ filter: 'var(--logo-filter)' }}>
@@ -176,7 +176,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
 
       <div 
         style={{ backgroundColor: 'var(--submenu-bg)', borderColor: 'var(--sidebar-border)' }}
-        className={`absolute left-20 top-0 h-full border-r shadow-[25px_0_60px_-15px_rgba(0,0,0,0.5)] transition-all duration-300 origin-left backdrop-blur-3xl overflow-hidden z-[999] ${
+        className={`absolute left-20 top-0 h-full border-r shadow-[25px_0_60px_-15px_rgba(0,0,0,0.5)] transition-all duration-300 origin-left backdrop-blur-3xl overflow-hidden z-[100002] ${
           currentHoveredNav
             ? 'w-[460px] opacity-100 translate-x-0' 
             : 'w-0 opacity-0 -translate-x-4 pointer-events-none'

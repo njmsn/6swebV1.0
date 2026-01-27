@@ -85,7 +85,6 @@ const PlaybackControl: React.FC<{
 
         <div className="flex-1 flex items-center space-x-4">
           <div className="flex-1 relative h-1.5 group">
-            {/* 时间随动气泡 - 仅在拖拽或播放时优雅显示 */}
             {isDragging && (
               <div 
                 className="absolute bottom-full mb-3 px-2.5 py-1 bg-slate-900 text-white text-[11px] font-bold rounded-md shadow-[0_8px_20px_rgba(0,0,0,0.3)] pointer-events-none -translate-x-1/2 z-[110] whitespace-nowrap animate-in fade-in zoom-in-95 duration-200"
@@ -96,7 +95,6 @@ const PlaybackControl: React.FC<{
                   <span className="text-white/40">/</span>
                   <span className="text-white/60">{formatTime(totalSeconds)}</span>
                 </div>
-                {/* 气泡小尖角 */}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-slate-900"></div>
               </div>
             )}
@@ -142,18 +140,18 @@ const PlaybackControl: React.FC<{
   );
 };
 
-// 辅助组件：信息展示行 - 优化标题超过四个字自动换行
+// 辅助组件：信息展示行 - 稍微增加垂直间距 py-1 且增加文字行高 leading-[20px]
 const InfoRow = ({ label, value, icon }: { label: string, value?: string, icon?: React.ReactNode }) => (
-  <div className="flex items-start py-1.5 border-b border-slate-50/50 last:border-0 group">
-    <div className="flex items-start shrink-0 w-[105px] space-x-2 pt-[3px]">
-      <div className="w-4 h-4 flex items-center justify-center text-slate-400 transition-colors group-hover:text-primary mt-[2px] shrink-0">
-        {icon || <div className="w-[1.5px] h-[10px] bg-slate-300 rounded-full" />}
+  <div className="flex items-start py-1 border-b border-slate-50/50 last:border-0 group">
+    <div className="flex items-start shrink-0 w-[82px] space-x-1.5 pt-[2px]">
+      <div className="w-3.5 h-3.5 flex items-center justify-center text-slate-400 transition-colors group-hover:text-primary mt-[2px] shrink-0">
+        {icon || <div className="w-[1px] h-[8px] bg-slate-300 rounded-full" />}
       </div>
-      <span className="text-slate-500 text-[13px] font-normal leading-[1.4] tracking-tight max-w-[56px] break-words">
+      <span className="text-slate-500 text-[12.5px] font-normal leading-[1.2] tracking-tight max-w-[52px] break-words">
         {label}
       </span>
     </div>
-    <span className="text-slate-700 text-[13px] font-normal leading-[24px] flex-1 break-all pt-[2px]">
+    <span className="text-slate-700 text-[12.5px] font-normal leading-[20px] flex-1 break-all pt-[0px]">
       {value || '--'}
     </span>
   </div>
@@ -199,10 +197,10 @@ const PersonnelPopup: React.FC<{ person: any; position: { x: number, y: number }
       }}>
       <div className="absolute bottom-[-11px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[12px] border-t-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.05)]"></div>
       <PopupHeader title="员工详细档案" onClose={onClose} />
-      <div className="px-5 pt-4 pb-1 shrink-0">
-        <div className="flex justify-between items-center mb-4">
+      <div className="px-5 pt-2 pb-0.5 shrink-0">
+        <div className="flex justify-between items-center mb-1.5">
           <div className="flex flex-col">
-            <h2 className="text-[17px] font-normal text-slate-800 tracking-tight leading-none">
+            <h2 className="text-[17px] font-bold text-slate-800 tracking-tight leading-none">
               {person.name || '董仲良'} ({person.id.toUpperCase() || 'M2'})
             </h2>
           </div>
@@ -211,16 +209,17 @@ const PersonnelPopup: React.FC<{ person: any; position: { x: number, y: number }
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full shadow-md"></div>
           </div>
         </div>
-        <div className="flex bg-slate-50 border border-slate-100 p-0.5 rounded-xl mb-1">
+        <div className="flex bg-slate-50 border border-slate-100 p-0.5 rounded-xl mb-0.5">
           {['实时', '计划', '历史'].map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-1.5 text-[12px] font-normal rounded-lg transition-all ${activeTab === tab ? 'bg-white text-primary shadow-[0_2px_8px_rgba(0,0,0,0.05)]' : 'text-slate-400 hover:text-slate-600'}`}>{tab}</button>
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-1 text-[12px] font-medium rounded-lg transition-all ${activeTab === tab ? 'bg-white text-primary shadow-[0_2px_8px_rgba(0,0,0,0.05)]' : 'text-slate-400 hover:text-slate-600'}`}>{tab}</button>
           ))}
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto px-5 pb-3 custom-scrollbar">
+      <div className="flex-1 overflow-y-hidden px-5 pb-3 custom-scrollbar">
         {activeTab === '实时' && (
           <div className="animate-in fade-in duration-300">
-            <div className="space-y-0.5">
+            {/* 增加 pt-3 以拉开内容项与上方页签的距离 */}
+            <div className="space-y-0 pt-3">
               <InfoRow label="职位" value="管网安检员" icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>} />
               <InfoRow label="版本号" value="v6.168.229" icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>} />
               <InfoRow label="IMEI" value="864502041234567" icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>} />
@@ -231,18 +230,18 @@ const PersonnelPopup: React.FC<{ person: any; position: { x: number, y: number }
               <InfoRow label="下班" value="--" icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" opacity="0.5"/></svg>} />
               <InfoRow label="同步" value="2025-05-22 10:45:00" icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>} />
             </div>
-            <div className="mt-1 pt-1 border-t border-slate-50/80 pb-0.5">
+            <div className="mt-1 pt-1.5 border-t border-slate-50/80 pb-0.5">
                <div className="flex items-center justify-between px-0.5 space-x-1">
-                 <div className="w-[62px] relative h-[14px] bg-white rounded-full overflow-hidden border shrink-0 transition-colors" style={{ borderColor: '#7edc89' }}>
+                 <div className="w-[68px] relative h-[16px] bg-white rounded-full overflow-hidden border shrink-0 transition-colors" style={{ borderColor: '#7edc89' }}>
                    <div className="h-full transition-all duration-1000 ease-out" style={{ width: `${person.progress || 0}%`, backgroundColor: '#ccedd0' }}></div>
-                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none"><span style={{ color: '#10b924' }} className="text-[9px] font-normal leading-none">{person.progress || 0}%</span></div>
+                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none"><span style={{ color: '#10b924' }} className="text-[12px] font-bold leading-none">{person.progress || 0}%</span></div>
                  </div>
                  <div className="flex items-center space-x-1 shrink-0">
-                   <svg className={`w-[18px] h-[18px] ${getBatteryColorClass(person.battery || 0)}`} viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="2" /><path d="M20 11V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /><rect x="4" y="9" width={Math.max(1, (person.battery / 100) * 12)} height="6" rx="0.5" fill="currentColor" /></svg>
-                   <span className="text-[12px] font-normal text-slate-600">{person.battery || 0}%</span>
+                   <svg className={`w-4 h-4 ${getBatteryColorClass(person.battery || 0)}`} viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="2" /><path d="M20 11V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /><rect x="4" y="9" width={Math.max(1, (person.battery / 100) * 12)} height="6" rx="0.5" fill="currentColor" /></svg>
+                   <span className="text-[12px] font-bold text-slate-600">{person.battery || 0}%</span>
                  </div>
-                 <div className="flex items-center space-x-0.5 shrink-0"><span className="text-[11px] font-normal text-slate-400">GPS:</span><span className={`text-[12px] font-normal ${person.status === 'error' ? 'text-rose-500' : 'text-emerald-600'}`}>{person.status === 'error' ? '离线' : '正常'}</span></div>
-                 <div className="flex items-center space-x-0.5 shrink-0"><span className="text-[11px] font-normal text-slate-400">通讯:</span><span className={`text-[12px] font-normal ${person.status === 'error' ? 'text-rose-500' : 'text-emerald-600'}`}>{person.status === 'error' ? '离线' : '正常'}</span></div>
+                 <div className="flex items-center space-x-0.5 shrink-0"><span className="text-[12px] font-medium text-slate-400">GPS:</span><span className={`text-[12px] font-bold ${person.status === 'error' ? 'text-rose-500' : 'text-emerald-600'}`}>{person.status === 'error' ? '离线' : '正常'}</span></div>
+                 <div className="flex items-center space-x-0.5 shrink-0"><span className="text-[12px] font-medium text-slate-400">通讯:</span><span className={`text-[12px] font-bold ${person.status === 'error' ? 'text-rose-500' : 'text-emerald-600'}`}>{person.status === 'error' ? '离线' : '正常'}</span></div>
                </div>
             </div>
           </div>
@@ -250,18 +249,18 @@ const PersonnelPopup: React.FC<{ person: any; position: { x: number, y: number }
         {activeTab === '计划' && (
           <div className="py-1 animate-in fade-in duration-300">
             {mockPlans.map((plan, i) => (
-              <div key={i} className="py-3 border-b border-slate-50 last:border-0">
-                <div className="text-[13px] font-normal text-slate-700 mb-1 tracking-tight">
+              <div key={i} className="py-2.5 border-b border-slate-50 last:border-0">
+                <div className="text-[12.5px] font-bold text-slate-700 mb-0.5 tracking-tight">
                   {plan.title}
                 </div>
-                <div className="text-[12px] text-slate-400 leading-relaxed font-normal">
+                <div className="text-[11.5px] text-slate-400 leading-relaxed font-normal">
                   {plan.detail}
                 </div>
               </div>
             ))}
           </div>
         )}
-        {activeTab === '历史' && (<div className="py-1 animate-in fade-in duration-300">{[{ time: '2026/01/16: 08:45 -', desc: '张扬2026/01/09的计划' },{ time: '2026/01/16: 08:45 -', desc: '张扬2026/01/09的计划' },{ time: '2026/01/16: 08:59 - 10:43', desc: '张扬2026/01/09的计划' },{ time: '2026/01/15: 09:12 - 17:30', desc: '张扬2026/01/08的计划' }].map((item, i) => (<div key={i} className="py-3.5 border-b border-slate-50 last:border-0"><div className="text-[12.5px] text-slate-300 mb-1.5 font-normal tracking-tight">{item.time}</div><div className="text-[12.5px] text-slate-500 leading-relaxed font-normal">{item.desc}</div></div>))}</div>)}
+        {activeTab === '历史' && (<div className="py-1 animate-in fade-in duration-300">{[{ time: '2026/01/16: 08:45 -', desc: '张扬2026/01/09的计划' },{ time: '2026/01/16: 08:45 -', desc: '张扬2026/01/09的计划' },{ time: '2026/01/16: 08:59 - 10:43', desc: '张扬2026/01/09的计划' },{ time: '2026/01/15: 09:12 - 17:30', desc: '张扬2026/01/08的计划' }].map((item, i) => (<div key={i} className="py-2.5 border-b border-slate-50 last:border-0"><div className="text-[12px] text-slate-300 mb-0.5 font-normal tracking-tight">{item.time}</div><div className="text-[12px] text-slate-500 leading-relaxed font-medium">{item.desc}</div></div>))}</div>)}
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { MOCK_PERSONNEL, MOCK_VEHICLES, MOCK_DRONES, MOCK_SITES_LIST, SiteListItem } from '../../constants.tsx';
 
@@ -48,7 +47,7 @@ const DRONE_PATH = `
 
 const SITE_ICON_PATH = `M12 3a9 9 0 0 0-9 9c0 .18.01.35.03.53A4 4 0 0 1 7 16h10a4 4 0 0 1 3.97-3.47c.02-.18.03-.35.03-.53a9 9 0 0 0-9-9zM12 5v4m-4-3l1.5 2.5m6.5-2.5L14.5 9`;
 
-const VEHICLE_SOLID_PATH = "M17.34 5.97l.35 1.01c.04.11.01.24-.06.33-.07.09-.18.14-.3.14H6.67c-.12 0-.23-.05-.3-.14-.07-.09-.1-.22-.06-.33l.35-1.01c.1-.28.36-.47.66-.47h9.36c.3 0 .56.19.66.47zM19 12v7c0 .55-.45 1-1 1h-1c-.55 0-1-.45-1-1v-1H7v1c0 .55-.45 1-1 1H5c-.55 0-1-.45-1-1v-7c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2zm-4.5 2c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm-5 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm-5 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z";
+const VEHICLE_SOLID_PATH = "M17.34 5.97l.35 1.01c.04.11.01.24-.06.33-.07.09-.18.14-.3.14H6.67c-.12 0-.23-.05-.3-.14-.07-.09-.1-.22-.06-.33l.35-1.01c.1-.28.36-.47.66-.47h9.36c.3 0 .56.19.66.47zM19 12v7c0 .55-.45 1-1 1h-1c-.55 0-1-.45-1-1v-1H7v1c0 .55-.45 1-1 1H5c-.55 0-1-.45-1-1v-7c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2zm-4.5 2c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm-5 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z";
 const TRUCK_SOLID_PATH = "M20 10V19C20 20.1 19.1 21 18 21H17C15.9 21 15 20.1 15 19V18H9V19C9 20.1 8.1 21 7 21H6C4.9 21 4 20.1 4 19V10L3 9V7C3 5.9 3.9 5 5 5H19C20.1 5 21 5.9 21 7V9L20 10ZM18 8H6V13H18V8ZM7 15.5C7.83 15.5 8.5 14.83 8.5 14S7.83 12.5 7 12.5 5.5 13.17 5.5 14 6.17 15.5 7 15.5ZM17 15.5C17.83 15.5 18.5 14.83 18.5 14S17.83 12.5 17 12.5 15.5 13.17 15.5 14 16.17 15.5 17 15.5Z";
 
 export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onToggle, onTaskClick, onViewAllTasks, onSiteClick, onPlaybackToggle, onPreviewImage }) => {
@@ -340,7 +339,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
     <label className="flex items-center space-x-2 cursor-pointer group select-none py-0.5">
       <div 
         onClick={(e) => { e.stopPropagation(); onChange(!checked); }}
-        className={`w-4 h-4 rounded flex items-center justify-center transition-all ${checked ? 'bg-[#3b82f6] text-white border-[#3b82f6]' : 'border border-slate-200 bg-white group-hover:border-[#3b82f6]'}`}
+        className={`w-4 h-4 rounded flex items-center justify-center transition-all ${checked ? 'bg-[#3b82f6] text-white border-[#3b82f6]' : 'border border-slate-300 bg-white group-hover:border-[#3b82f6]'}`}
       >
         {checked && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>}
       </div>
@@ -377,7 +376,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
               onClick={() => { toggleExpand(site.id); onSiteClick?.(site); }}
             >
               <div className="flex items-start space-x-3">
-                <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 shadow-sm border border-slate-100 mt-0.5 bg-slate-50 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 shadow-sm border border-slate-300 mt-0.5 bg-slate-50 flex items-center justify-center">
                   {hasImage ? (
                     <img src={site.image} className="w-full h-full object-cover" alt={site.name} />
                   ) : (
@@ -404,7 +403,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                 <div className="mt-4 border-t border-slate-50 pt-3 px-1 space-y-3.5 animate-in slide-in-from-top-2 duration-300" onClick={(e) => e.stopPropagation()}>
                   {hasImage ? (
                     <div 
-                      className="relative rounded-xl overflow-hidden shadow-sm border border-slate-100/60 aspect-video mb-4 group/carousel cursor-zoom-in"
+                      className="relative rounded-xl overflow-hidden shadow-sm border border-slate-300 aspect-video mb-4 group/carousel cursor-zoom-in"
                       onClick={() => onPreviewImage?.(siteImages, siteCarouselIndex)}
                     >
                       <div 
@@ -439,7 +438,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                       </div>
                     </div>
                   ) : (
-                    <div className="relative rounded-xl overflow-hidden shadow-sm border border-slate-100/60 aspect-video mb-4 bg-slate-50 flex flex-col items-center justify-center space-y-2">
+                    <div className="relative rounded-xl overflow-hidden shadow-sm border border-slate-300 aspect-video mb-4 bg-slate-50 flex flex-col items-center justify-center space-y-2">
                       <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-300">
                         <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -479,9 +478,9 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                       {item.name}
                     </h3>
                     {activeSubTab === 'personnel' && (
-                      <div className="flex-1 min-w-[60px] max-w-[100px] relative h-[14.5px] bg-white rounded-full overflow-hidden border transition-colors flex items-center justify-center shrink-0" style={{ borderColor: '#7edc89' }}>
+                      <div className="flex-1 min-w-[60px] max-w-[100px] relative h-[16px] bg-white rounded-full overflow-hidden border transition-colors flex items-center justify-center shrink-0" style={{ borderColor: '#7edc89' }}>
                         <div className="absolute left-0 h-full transition-all duration-1000 ease-out" style={{ width: `${item.progress}%`, backgroundColor: '#ccedd0' }}></div>
-                        <span style={{ color: '#10b924' }} className="relative text-[10px] font-bold leading-none pointer-events-none">{item.progress}%</span>
+                        <span style={{ color: '#10b924' }} className="relative text-[12px] font-bold leading-none pointer-events-none">{item.progress}%</span>
                       </div>
                     )}
                   </div>
@@ -533,7 +532,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                           <div className="relative"><button onClick={() => { const next = selectedTrajectoryAction === 'track' ? null : 'track'; setSelectedTrajectoryAction(next); onPlaybackToggle?.(next === 'track', item.id); }} className={`peer w-8 h-8 rounded-lg flex items-center justify-center transition-all border active:scale-90 z-20 relative ${selectedTrajectoryAction === 'track' ? 'bg-[#9a6bff] text-white shadow-lg shadow-[#9a6bff]/30' : 'bg-white text-slate-500 hover:bg-slate-50'}`}><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2"/><path d="M10 8l6 4-6 4z" fill="currentColor"/></svg></button><div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 opacity-0 peer-hover:opacity-100 transition-all duration-200 translate-y-2 peer-hover:translate-y-0 z-50 pointer-events-none"><div className="tooltip-bubble tooltip-arrow-bottom text-nowrap">轨迹回放</div></div></div>
                         </div>
                       </div>
-                      <div className="space-y-4 px-1">{trajectoryData.map((traj, idx) => { const isSelected = selectedTrajectoryKeys.has(`${item.id}-${idx}`); return (<div key={idx} onClick={() => toggleTrajectory(item.id, idx)} className="flex items-center justify-between group/line cursor-pointer select-none"><div className="flex items-center space-x-3.5"><div className={`w-5 h-5 rounded-md border transition-all duration-200 flex items-center justify-center ${isSelected ? 'bg-[#7c4dff] border-[#7c4dff] text-white shadow-sm' : 'bg-white border-slate-200'}`}>{isSelected && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" strokeWidth="3"/></svg>}</div><div className="flex items-center"><div className={`w-3.5 h-3.5 mr-2.5 rounded-sm shrink-0 shadow-sm ${segmentColors[idx % segmentColors.length]}`}></div><span className={`text-[12px] font-normal ${isSelected ? 'text-slate-800' : 'text-slate-700'}`}>{traj.time}</span></div></div><div className="flex items-center space-x-3"><span className={`px-2 py-0.5 rounded text-[12px] font-normal ${isSelected ? 'bg-[#7c4dff]/10 text-[#7c4dff]' : 'bg-slate-50 text-slate-400'}`}>{traj.dist}</span><span className="text-[12px] text-slate-500 font-normal w-12 text-right">{traj.dur}</span></div></div>); })}</div>
+                      <div className="space-y-4 px-1">{trajectoryData.map((traj, idx) => { const isSelected = selectedTrajectoryKeys.has(`${item.id}-${idx}`); return (<div key={idx} onClick={() => toggleTrajectory(item.id, idx)} className="flex items-center justify-between group/line cursor-pointer select-none"><div className="flex items-center space-x-3.5"><div className={`w-5 h-5 rounded-md border transition-all duration-200 flex items-center justify-center ${isSelected ? 'bg-[#7c4dff] border-[#7c4dff] text-white shadow-sm' : 'bg-white border-slate-300'}`}>{isSelected && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" strokeWidth="3"/></svg>}</div><div className="flex items-center"><div className={`w-3.5 h-3.5 mr-2.5 rounded-sm shrink-0 shadow-sm ${segmentColors[idx % segmentColors.length]}`}></div><span className={`text-[12px] font-normal ${isSelected ? 'text-slate-800' : 'text-slate-700'}`}>{traj.time}</span></div></div><div className="flex items-center space-x-3"><span className={`px-2 py-0.5 rounded text-[12px] font-normal ${isSelected ? 'bg-[#7c4dff]/10 text-[#7c4dff]' : 'bg-slate-50 text-slate-400'}`}>{traj.dist}</span><span className="text-[12px] text-slate-500 font-normal w-12 text-right">{traj.dur}</span></div></div>); })}</div>
                     </div>
                   </div>
                 )}
@@ -602,12 +601,13 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
     <div className="flex h-full bg-white overflow-visible flex-row">
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-500 ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10 pointer-events-none w-0'}`}>
         <div className="pt-2 pb-1 px-4 border-b border-slate-50 relative z-50">
-          <div className="flex items-center justify-between bg-white border border-slate-100/60 rounded-xl px-3 py-2 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] relative">
+          {/* 日期切换容器：应用 -mx-2 以对齐下方展开项的边框 */}
+          <div className="flex items-center justify-between bg-white rounded-xl px-3 py-2 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] relative -mx-2">
             <button onClick={handlePrevDay} className="text-slate-500 hover:text-[#7c4dff] hover:bg-slate-50 p-1 rounded-md transition-all active:scale-90"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg></button>
             <div onClick={() => setIsCalendarOpen(!isCalendarOpen)} className="flex items-center space-x-2.5 cursor-pointer group px-2 py-1"><svg className="w-4 h-4 text-[#7c4dff] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" /></svg><span className="text-[13px] font-normal text-slate-700">{formatDisplayDate(selectedDate)}</span><svg className={`w-3 h-3 text-slate-500 group-hover:text-[#7c4dff] transition-all ${isCalendarOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></div>
             <button onClick={handleNextDay} className="text-slate-500 hover:text-[#7c4dff] hover:bg-slate-50 p-1 rounded-md transition-all active:scale-90"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" /></svg></button>
             {isCalendarOpen && (
-              <div ref={calendarRef} className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-slate-100 z-[100] p-4 animate-in fade-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
+              <div ref={calendarRef} className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-slate-300 z-[100] p-4 animate-in fade-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-4 px-1"><div className="flex items-center space-x-2">{pickerMode === 'day' ? (<div className="flex items-center space-x-1.5 group cursor-pointer" onClick={() => setPickerMode('year')}><span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors">{viewDate.getFullYear()}年</span><span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors" onClick={handleMonthPickerClick}>{String(viewDate.getMonth() + 1).padStart(2, '0')}月</span><svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg></div>) : (<div className="flex items-center space-x-1.5 group cursor-pointer" onClick={() => setPickerMode('year')}><span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors">{viewDate.getFullYear()}年</span><svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg></div>)}</div><div className="flex items-center space-x-3"><button onClick={() => changeView(-1)} className="p-1 text-slate-500 hover:text-slate-700 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" /></svg></button><button onClick={() => changeView(1)} className="p-1 text-slate-500 hover:text-slate-700 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" /></svg></button></div></div>
                 {pickerMode === 'day' && (<><div className="grid grid-cols-7 mb-2 border-b border-slate-50 pb-2">{['一', '二', '三', '四', '五', '六', '日'].map(w => (<span key={w} className="text-center text-[12px] font-normal text-slate-500">{w}</span>))}</div><div className="grid grid-cols-7 gap-y-1">{generateCalendarDays().map((day, idx) => { const ymd = formatToYMD(day.date); return (<div key={idx} onClick={() => handleDateSelect(day.date)} className={`aspect-square flex items-center justify-center text-[12px] font-normal rounded-lg cursor-pointer transition-all ${day.isCurrentMonth ? 'text-slate-700' : 'text-slate-400'} ${ymd === selectedDate ? 'bg-[#3b82f6] text-white shadow-[0_4px_12px_rgba(59,130,246,0.3)]' : 'hover:bg-slate-50'} ${ymd === formatToYMD(getTodayDate()) && ymd !== selectedDate ? 'border border-[#3b82f6] text-[#3b82f6]' : ''}`}>{day.date.getDate()}</div>); })}</div></>)}
                 {pickerMode === 'month' && (<div className="grid grid-cols-3 gap-x-2 gap-y-6 py-4">{['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'].map((m, idx) => (<div key={m} onClick={() => handleMonthSelect(idx)} className={`flex items-center justify-center py-2.5 rounded-xl text-[13px] font-bold cursor-pointer transition-all ${viewDate.getMonth() === idx ? 'bg-[#3b82f6] text-white shadow-lg' : 'text-slate-700 hover:bg-slate-50 hover:text-[#3b82f6]'}`}>{m}</div>))}</div>)}
@@ -621,13 +621,13 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
           <div className="px-5 mt-2 space-y-3 relative z-30" ref={filterRef}>
             <div className="flex space-x-3">
               <div className="relative flex-1">
-                <input type="text" placeholder={activeSubTab === 'personnel' ? "搜索人员..." : isDroneRelated ? "搜索无人机..." : "搜索车辆..."} className="w-full h-10 pl-10 pr-4 bg-slate-50/50 border border-slate-100 rounded-lg text-[12px] font-normal focus:ring-2 focus:ring-[#9a6bff]/20 focus:border-[#9a6bff] outline-none transition-all placeholder:text-slate-500" />
+                <input type="text" placeholder={activeSubTab === 'personnel' ? "搜索人员..." : isDroneRelated ? "搜索无人机..." : "搜索车辆..."} className="w-full h-10 pl-10 pr-4 bg-slate-50/50 border border-slate-300 rounded-lg text-[12px] font-normal focus:ring-2 focus:ring-[#9a6bff]/20 focus:border-[#9a6bff] outline-none transition-all placeholder:text-slate-500" />
                 <svg className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </div>
               <div className="relative">
                 <button 
                   onClick={() => setIsFilterOpen(!isFilterOpen)} 
-                  className={`w-10 h-10 flex items-center justify-center border rounded-lg transition-all active:scale-95 shadow-sm ${isFilterOpen ? 'bg-[#9a6bff] border-[#9a6bff] text-white' : 'bg-white border-slate-100 text-slate-600 hover:text-[#9a6bff]'}`}
+                  className={`w-10 h-10 flex items-center justify-center border rounded-lg transition-all active:scale-95 shadow-sm ${isFilterOpen ? 'bg-[#9a6bff] border-[#9a6bff] text-white' : 'bg-white border-slate-300 text-slate-600 hover:text-[#9a6bff]'}`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -637,7 +637,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                 {/* 筛选弹窗 */}
                 {isFilterOpen && (
                   <div 
-                    className="absolute top-full right-0 mt-2.5 w-[310px] bg-white border border-slate-200 rounded-xl shadow-[0_20px_50px_-15px_rgba(0,0,0,0.18)] p-4 space-y-4 z-[200] animate-in zoom-in-95 fade-in duration-200 transform origin-top-right"
+                    className="absolute top-full right-0 mt-2.5 w-[310px] bg-white border border-slate-300 rounded-xl shadow-[0_20px_50px_-15px_rgba(0,0,0,0.18)] p-4 space-y-4 z-[200] animate-in zoom-in-95 fade-in duration-200 transform origin-top-right"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-start space-x-6">
@@ -646,7 +646,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                         <select 
                           value={filterSorting}
                           onChange={(e) => setFilterSorting(e.target.value)}
-                          className="w-full h-8.5 pl-3 pr-8 bg-slate-50/50 border border-slate-200 rounded text-[14px] text-slate-700 outline-none appearance-none focus:border-primary focus:bg-white transition-all cursor-pointer"
+                          className="w-full h-8.5 pl-3 pr-8 bg-slate-50/50 border border-slate-300 rounded text-[14px] text-slate-700 outline-none appearance-none focus:border-primary focus:bg-white transition-all cursor-pointer"
                         >
                           <option>状态</option>
                           <option>名称</option>
@@ -699,12 +699,41 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
               </div>
             </div>
             
-            {activeSubTab !== 'site' && (
-              <div className="flex space-x-2.5 pb-1">
-                <button onClick={() => handleSortClick('status')} className={`flex-1 h-9 flex items-center justify-between px-3 border rounded-lg transition-all group ${sortField === 'status' ? 'bg-[#9a6bff]/5 border-[#9a6bff]/30' : 'bg-white border-slate-100 hover:border-[#9a6bff]/40 hover:bg-slate-50/50'}`}><div className="flex items-center space-x-2"><svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" strokeWidth="2"/></svg><span className={`text-[12px] font-normal transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-700 group-hover:text-slate-900'}`}>按状态</span></div><div className={`transition-all duration-300 ${sortField === 'status' && sortOrder === 'desc' ? 'rotate-180' : ''}`}><svg className={`w-3 h-3 ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg></div></button>
-                <button onClick={() => handleSortClick('name')} className={`flex-1 h-9 flex items-center justify-between px-3 border rounded-lg transition-all group ${sortField === 'name' ? 'bg-[#9a6bff]/5 border-[#9a6bff]/30' : 'bg-white border-slate-100 hover:border-[#9a6bff]/40 hover:bg-slate-50/50'}`}><div className="flex items-center space-x-2"><svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'name' ? 'text-[#9a6bff]' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" strokeWidth="2"/></svg><span className={`text-[12px] font-normal transition-colors ${sortField === 'name' ? 'text-[#9a6bff]' : 'text-slate-700 group-hover:text-slate-900'}`}>按姓名</span></div><div className={`transition-all duration-300 ${sortField === 'name' && sortOrder === 'desc' ? 'rotate-180' : ''}`}><svg className={`w-3 h-3 ${sortField === 'name' ? 'text-[#9a6bff]' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg></div></button>
-              </div>
-            )}
+            <div className="flex space-x-2.5 pb-1">
+              <button 
+                onClick={() => handleSortClick('status')} 
+                className={`flex-1 h-9 flex items-center justify-between px-3 border rounded-lg transition-all group ${sortField === 'status' ? 'bg-[#9a6bff]/5 border-[#9a6bff]/30' : 'bg-white border-slate-300 hover:border-[#9a6bff]/40 hover:bg-slate-50/50'}`}
+              >
+                <div className="flex items-center space-x-2">
+                  <svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" strokeWidth="2"/>
+                  </svg>
+                  <span className={`text-[12px] font-normal transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-700 group-hover:text-slate-900'}`}>按状态</span>
+                </div>
+                <div className={`transition-all duration-300 ${sortField === 'status' && sortOrder === 'desc' ? 'rotate-180' : ''}`}>
+                  <svg className={`w-3 h-3 ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 9l-7 7-7-7" strokeWidth="2.5" />
+                  </svg>
+                </div>
+              </button>
+
+              <button 
+                onClick={() => handleSortClick('name')} 
+                className={`flex-1 h-9 flex items-center justify-between px-3 border rounded-lg transition-all group ${sortField === 'name' ? 'bg-[#9a6bff]/5 border-[#9a6bff]/30' : 'bg-white border-slate-300 hover:border-[#9a6bff]/40 hover:bg-slate-50/50'}`}
+              >
+                <div className="flex items-center space-x-2">
+                  <svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'name' ? 'text-[#9a6bff]' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" strokeWidth="2"/>
+                  </svg>
+                  <span className={`text-[12px] font-normal transition-colors ${sortField === 'name' ? 'text-[#9a6bff]' : 'text-slate-700 group-hover:text-slate-900'}`}>按姓名</span>
+                </div>
+                <div className={`transition-all duration-300 ${sortField === 'name' && sortOrder === 'desc' ? 'rotate-180' : ''}`}>
+                  <svg className={`w-3 h-3 ${sortField === 'name' ? 'text-[#9a6bff]' : 'text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 9l-7 7-7-7" strokeWidth="2.5" />
+                  </svg>
+                </div>
+              </button>
+            </div>
           </div>
           {renderItemList(dataToRender)}
         </div>

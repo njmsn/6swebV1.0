@@ -1,8 +1,7 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar.tsx';
-// Fix: Updated import casing to use Header.tsx (PascalCase) to match component naming conventions and resolve casing collision error
-import { Header } from './components/Header.tsx';
+// Adjusted import casing to match components/header.tsx and resolve filename casing conflict.
+import { Header } from './components/header.tsx';
 import { MapArea } from './components/realTime/MapArea.tsx';
 import { InspectionPanel } from './components/realTime/InspectionPanel.tsx';
 import { SiteManagementContent } from './components/dataMain/SiteManagementContent.tsx';
@@ -252,7 +251,7 @@ const App: React.FC = () => {
                         <span className={`mr-2.5 transition-colors ${isActive ? 'text-primary' : 'text-slate-300'}`}>
                           {tab.icon}
                         </span>
-                        <span className={`text-[12.5px] whitespace-nowrap transition-colors ${isActive ? 'font-black' : 'font-bold'}`}>
+                        <span className={`text-[12px] whitespace-nowrap transition-colors ${isActive ? 'font-black' : 'font-bold'}`}>
                           {tab.label}
                         </span>
                         <button 
