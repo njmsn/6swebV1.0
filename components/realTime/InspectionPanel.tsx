@@ -73,7 +73,11 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
   const [unreadTabs, setUnreadTabs] = useState<Set<SubTab>>(new Set(['hazard', 'alarm', 'site', 'droneLeak', 'vehicleLeak']));
   const [readItemIds, setReadItemIds] = useState<Set<string>>(new Set());
 
-  // 用于工地轮播图的当前索引状态
+  // 筛选状态
+  const [filterSorting, setFilterSorting] = useState('状态');
+  const [filterStatus, setFilterStatus] = useState(new Set(['全部', '下班', '正常', '信号中断', '未上班', 'GPS异常', 'GPS未开', '电池没电']));
+  const [filterType, setFilterType] = useState(new Set(['全部']));
+
   const [siteCarouselIndex, setSiteCarouselIndex] = useState(0);
   
   const getTodayDate = () => new Date();
@@ -320,12 +324,27 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
     { id: 'vl2', title: '点火', time: '10:52' },
   ];
 
-  const FilterCheckbox = ({ label, checked = true }: { label: string; checked?: boolean }) => (
-    <label className="flex items-center space-x-1.5 cursor-pointer group select-none">
-      <div className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-all ${checked ? 'bg-[#3b82f6] text-white' : 'border border-slate-200 bg-white group-hover:border-[#3b82f6]'}`}>
-        {checked && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>}
+  // 无人机专属日志
+  const DRONE_LOGS: LogRecord[] = [
+    { id: 'dl1', title: '降落', time: '11:06' },
+    { id: 'dl2', title: '起飞', time: '10:52' },
+  ];
+
+  const COMMON_LOGS: LogRecord[] = [
+    { id: 'cl1', title: '信号恢复', time: '11:06' },
+    { id: 'cl2', title: '进入监控区域', time: '10:52' },
+  ];
+
+  // 复选框组件 - 文字大小统一为 14px
+  const FilterCheckbox = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (val: boolean) => void }) => (
+    <label className="flex items-center space-x-2 cursor-pointer group select-none py-0.5">
+      <div 
+        onClick={(e) => { e.stopPropagation(); onChange(!checked); }}
+        className={`w-4 h-4 rounded flex items-center justify-center transition-all ${checked ? 'bg-[#3b82f6] text-white border-[#3b82f6]' : 'border border-slate-200 bg-white group-hover:border-[#3b82f6]'}`}
+      >
+        {checked && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>}
       </div>
-      <span className="text-[12px] font-normal text-slate-700 group-hover:text-slate-900 transition-colors">{label}</span>
+      <span className="text-[14px] font-normal text-slate-600 group-hover:text-slate-800 transition-colors" onClick={() => onChange(!checked)}>{label}</span>
     </label>
   );
 
@@ -337,11 +356,13 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
         if (activeSubTab === 'site') {
           const site = item as SiteListItem;
           const isUnread = !readItemIds.has(site.id);
-          const siteImages = [
+          const hasImage = !!site.image;
+          
+          const siteImages = hasImage ? [
             site.image,
             site.image.replace('seed/s', 'seed/site_alt_'),
             site.image.replace('seed/s', 'seed/site_env_')
-          ];
+          ] : [];
           
           return (
             <div 
@@ -356,8 +377,14 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
               onClick={() => { toggleExpand(site.id); onSiteClick?.(site); }}
             >
               <div className="flex items-start space-x-3">
-                <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 shadow-sm border border-slate-100 mt-0.5">
-                  <img src={site.image} className="w-full h-full object-cover" alt={site.name} />
+                <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 shadow-sm border border-slate-100 mt-0.5 bg-slate-50 flex items-center justify-center">
+                  {hasImage ? (
+                    <img src={site.image} className="w-full h-full object-cover" alt={site.name} />
+                  ) : (
+                    <svg className="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col space-y-1">
                   <div className="flex items-center justify-between">
@@ -375,41 +402,52 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
               </div>
               {isExpanded && (
                 <div className="mt-4 border-t border-slate-50 pt-3 px-1 space-y-3.5 animate-in slide-in-from-top-2 duration-300" onClick={(e) => e.stopPropagation()}>
-                  <div 
-                    className="relative rounded-xl overflow-hidden shadow-sm border border-slate-100/60 aspect-video mb-4 group/carousel cursor-zoom-in"
-                    onClick={() => onPreviewImage?.(siteImages, siteCarouselIndex)}
-                  >
+                  {hasImage ? (
                     <div 
-                      className="w-full h-full flex transition-transform duration-500 ease-out"
-                      style={{ transform: `translateX(-${siteCarouselIndex * 100}%)` }}
+                      className="relative rounded-xl overflow-hidden shadow-sm border border-slate-100/60 aspect-video mb-4 group/carousel cursor-zoom-in"
+                      onClick={() => onPreviewImage?.(siteImages, siteCarouselIndex)}
                     >
-                      {siteImages.map((img, i) => (
-                        <img key={i} src={img} className="w-full h-full object-cover shrink-0" alt={`工地预览图 ${i + 1}`} />
-                      ))}
-                    </div>
-                    
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setSiteCarouselIndex(prev => prev > 0 ? prev - 1 : siteImages.length - 1); }}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/20 text-white backdrop-blur-md flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black/40 z-10"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
-                    </button>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setSiteCarouselIndex(prev => (prev + 1) % siteImages.length); }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/20 text-white backdrop-blur-md flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black/40 z-10"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
-                    </button>
+                      <div 
+                        className="w-full h-full flex transition-transform duration-500 ease-out"
+                        style={{ transform: `translateX(-${siteCarouselIndex * 100}%)` }}
+                      >
+                        {siteImages.map((img, i) => (
+                          <img key={i} src={img} className="w-full h-full object-cover shrink-0" alt={`工地预览图 ${i + 1}`} />
+                        ))}
+                      </div>
+                      
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setSiteCarouselIndex(prev => prev > 0 ? prev - 1 : siteImages.length - 1); }}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/20 text-white backdrop-blur-md flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black/40 z-10"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setSiteCarouselIndex(prev => (prev + 1) % siteImages.length); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/20 text-white backdrop-blur-md flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-black/40 z-10"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+                      </button>
 
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-1.5 z-10">
-                      {siteImages.map((_, i) => (
-                        <div 
-                          key={i} 
-                          className={`w-1.5 h-1.5 rounded-full transition-all ${siteCarouselIndex === i ? 'bg-white w-4' : 'bg-white/40'}`}
-                        />
-                      ))}
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-1.5 z-10">
+                        {siteImages.map((_, i) => (
+                          <div 
+                            key={i} 
+                            className={`w-1.5 h-1.5 rounded-full transition-all ${siteCarouselIndex === i ? 'bg-white w-4' : 'bg-white/40'}`}
+                          />
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="relative rounded-xl overflow-hidden shadow-sm border border-slate-100/60 aspect-video mb-4 bg-slate-50 flex flex-col items-center justify-center space-y-2">
+                      <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-300">
+                        <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <span className="text-[12px] font-medium text-slate-400 tracking-tight">暂无现场照片数据</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -441,7 +479,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                       {item.name}
                     </h3>
                     {activeSubTab === 'personnel' && (
-                      <div className="w-32 relative h-[14.5px] bg-white rounded-full overflow-hidden border shrink-0 transition-colors flex items-center justify-center" style={{ borderColor: '#7edc89' }}>
+                      <div className="flex-1 min-w-[60px] max-w-[100px] relative h-[14.5px] bg-white rounded-full overflow-hidden border transition-colors flex items-center justify-center shrink-0" style={{ borderColor: '#7edc89' }}>
                         <div className="absolute left-0 h-full transition-all duration-1000 ease-out" style={{ width: `${item.progress}%`, backgroundColor: '#ccedd0' }}></div>
                         <span style={{ color: '#10b924' }} className="relative text-[10px] font-bold leading-none pointer-events-none">{item.progress}%</span>
                       </div>
@@ -489,7 +527,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                           <div className={`w-5 h-5 rounded-md border transition-all duration-200 flex items-center justify-center cursor-pointer ${isAllTrajectoriesSelected ? 'bg-[#7c4dff] border-[#7c4dff] text-white shadow-sm shadow-[#7c4dff]/20' : 'bg-white border-slate-300 group-hover/all:border-slate-400'}`}>
                             {isAllTrajectoriesSelected && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" strokeWidth="3"/></svg>}
                           </div>
-                          <span className="text-[12px] font-normal text-slate-700 uppercase tracking-[0.15em] select-none cursor-pointer group-hover/all:text-slate-900 transition-colors">轨迹分段</span>
+                          <span className="text-[12px] font-normal text-slate-700 uppercase tracking-[0.15em] select-none cursor-pointer group-hover/all:text-slate-900 transition-colors">全部轨迹</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <div className="relative"><button onClick={() => { const next = selectedTrajectoryAction === 'track' ? null : 'track'; setSelectedTrajectoryAction(next); onPlaybackToggle?.(next === 'track', item.id); }} className={`peer w-8 h-8 rounded-lg flex items-center justify-center transition-all border active:scale-90 z-20 relative ${selectedTrajectoryAction === 'track' ? 'bg-[#9a6bff] text-white shadow-lg shadow-[#9a6bff]/30' : 'bg-white text-slate-500 hover:bg-slate-50'}`}><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2"/><path d="M10 8l6 4-6 4z" fill="currentColor"/></svg></button><div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 opacity-0 peer-hover:opacity-100 transition-all duration-200 translate-y-2 peer-hover:translate-y-0 z-50 pointer-events-none"><div className="tooltip-bubble tooltip-arrow-bottom text-nowrap">轨迹回放</div></div></div>
@@ -514,12 +552,39 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   <div className="pt-4 px-5 relative">
                     <div className="absolute left-[23px] top-6 bottom-4 w-0.5 bg-slate-100 rounded-full"></div>
                     <div className="space-y-5">
-                      {(isPersonnelRelated ? PERSONNEL_LOGS : VEHICLE_LOGS).map((log, idx) => (
-                        <div key={log.id} className="flex items-center relative pl-8 group/log">
-                          <div className={`absolute left-0 w-3 h-3 rounded-full border-2 bg-white transition-all z-10 ${idx === 0 ? 'border-primary shadow-[0_0_8px_rgba(154,107,255,0.5)] scale-110' : 'border-slate-300'}`}></div>
-                          <div className="flex-1 flex items-center justify-between"><span className={`text-[13px] font-medium ${idx === 0 ? 'text-primary' : 'text-slate-600'}`}>{log.title}</span><span className="text-[12px] text-slate-400 font-mono">{log.time}</span></div>
-                        </div>
-                      ))}
+                      {(isDroneRelated ? DRONE_LOGS : isPersonnelRelated ? PERSONNEL_LOGS : VEHICLE_LOGS).map((log, idx) => {
+                        // 语义颜色逻辑：点火/起飞为绿色；熄火/降落为灰色；其余首项为紫色
+                        const isIgnitionOn = log.title === '点火' || log.title === '起飞';
+                        const isIgnitionOff = log.title === '熄火' || log.title === '降落';
+                        
+                        return (
+                          <div key={log.id} className="flex items-center relative pl-8 group/log">
+                            <div className={`absolute left-0 w-3 h-3 rounded-full border-2 bg-white transition-all z-10 ${
+                              isIgnitionOn 
+                                ? 'border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] scale-110' 
+                                : isIgnitionOff 
+                                  ? 'border-slate-400 bg-slate-100' 
+                                  : idx === 0 
+                                    ? 'border-primary shadow-[0_0_8px_rgba(154,107,255,0.5)] scale-110' 
+                                    : 'border-slate-300'
+                            }`}></div>
+                            <div className="flex-1 flex items-center justify-between">
+                              <span className={`text-[13px] font-medium ${
+                                isIgnitionOn 
+                                  ? 'text-emerald-600' 
+                                  : isIgnitionOff 
+                                    ? 'text-slate-500' 
+                                    : idx === 0 
+                                      ? 'text-primary' 
+                                      : 'text-slate-600'
+                              }`}>
+                                {log.title}
+                              </span>
+                              <span className="text-[12px] text-slate-400 font-mono">{log.time}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -553,21 +618,94 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
           </div>
         </div>
         <div className="flex-1 flex flex-col min-h-0 relative">
-          {activeSubTab !== 'site' && (
-            <div className="px-5 mt-2 space-y-3 relative z-30" ref={filterRef}>
-              <div className="flex space-x-3">
-                <div className="relative flex-1">
-                  <input type="text" placeholder={activeSubTab === 'personnel' ? "搜索人员..." : isDroneRelated ? "搜索无人机..." : "搜索车辆..."} className="w-full h-10 pl-10 pr-4 bg-slate-50/50 border border-slate-100 rounded-lg text-[12px] font-normal focus:ring-2 focus:ring-[#9a6bff]/20 focus:border-[#9a6bff] outline-none transition-all placeholder:text-slate-500" />
-                  <svg className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </div>
-                <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={`w-10 h-10 flex items-center justify-center border rounded-lg transition-all active:scale-95 shadow-sm ${isFilterOpen ? 'bg-[#9a6bff] border-[#9a6bff] text-white' : 'bg-white border-slate-100 text-slate-600 hover:text-[#9a6bff]'}`}><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg></button>
+          <div className="px-5 mt-2 space-y-3 relative z-30" ref={filterRef}>
+            <div className="flex space-x-3">
+              <div className="relative flex-1">
+                <input type="text" placeholder={activeSubTab === 'personnel' ? "搜索人员..." : isDroneRelated ? "搜索无人机..." : "搜索车辆..."} className="w-full h-10 pl-10 pr-4 bg-slate-50/50 border border-slate-100 rounded-lg text-[12px] font-normal focus:ring-2 focus:ring-[#9a6bff]/20 focus:border-[#9a6bff] outline-none transition-all placeholder:text-slate-500" />
+                <svg className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </div>
+              <div className="relative">
+                <button 
+                  onClick={() => setIsFilterOpen(!isFilterOpen)} 
+                  className={`w-10 h-10 flex items-center justify-center border rounded-lg transition-all active:scale-95 shadow-sm ${isFilterOpen ? 'bg-[#9a6bff] border-[#9a6bff] text-white' : 'bg-white border-slate-100 text-slate-600 hover:text-[#9a6bff]'}`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                </button>
+
+                {/* 筛选弹窗 */}
+                {isFilterOpen && (
+                  <div 
+                    className="absolute top-full right-0 mt-2.5 w-[310px] bg-white border border-slate-200 rounded-xl shadow-[0_20px_50px_-15px_rgba(0,0,0,0.18)] p-4 space-y-4 z-[200] animate-in zoom-in-95 fade-in duration-200 transform origin-top-right"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center justify-start space-x-6">
+                      <span className="text-[14px] font-normal text-slate-500 w-12 shrink-0">排序</span>
+                      <div className="relative w-44">
+                        <select 
+                          value={filterSorting}
+                          onChange={(e) => setFilterSorting(e.target.value)}
+                          className="w-full h-8.5 pl-3 pr-8 bg-slate-50/50 border border-slate-200 rounded text-[14px] text-slate-700 outline-none appearance-none focus:border-primary focus:bg-white transition-all cursor-pointer"
+                        >
+                          <option>状态</option>
+                          <option>名称</option>
+                          <option>时间</option>
+                        </select>
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start justify-start space-x-6">
+                      <span className="text-[14px] font-normal text-slate-500 w-12 shrink-0 pt-0.5">状态:</span>
+                      <div className="grid grid-cols-2 gap-x-2 gap-y-2.5 flex-1">
+                        {['全部', '下班', '正常', '信号中断', '未上班', 'GPS异常', 'GPS未开', '电池没电'].map(label => (
+                          <FilterCheckbox 
+                            key={label}
+                            label={label}
+                            checked={filterStatus.has(label)}
+                            onChange={(val) => {
+                              const next = new Set(filterStatus);
+                              if (label === '全部') {
+                                if (val) ['全部', '下班', '正常', '信号中断', '未上班', 'GPS异常', 'GPS未开', '电池没电'].forEach(l => next.add(l));
+                                else next.clear();
+                              } else {
+                                if (val) next.add(label);
+                                else { next.delete(label); next.delete('全部'); }
+                              }
+                              setFilterStatus(next);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-slate-100"></div>
+
+                    <div className="flex items-center justify-start space-x-6">
+                      <span className="text-[14px] font-normal text-slate-500 w-12 shrink-0">类型:</span>
+                      <div className="flex items-center">
+                        <FilterCheckbox 
+                          label="全部" 
+                          checked={filterType.has('全部')}
+                          onChange={(val) => setFilterType(val ? new Set(['全部']) : new Set())}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {activeSubTab !== 'site' && (
               <div className="flex space-x-2.5 pb-1">
                 <button onClick={() => handleSortClick('status')} className={`flex-1 h-9 flex items-center justify-between px-3 border rounded-lg transition-all group ${sortField === 'status' ? 'bg-[#9a6bff]/5 border-[#9a6bff]/30' : 'bg-white border-slate-100 hover:border-[#9a6bff]/40 hover:bg-slate-50/50'}`}><div className="flex items-center space-x-2"><svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" strokeWidth="2"/></svg><span className={`text-[12px] font-normal transition-colors ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-700 group-hover:text-slate-900'}`}>按状态</span></div><div className={`transition-all duration-300 ${sortField === 'status' && sortOrder === 'desc' ? 'rotate-180' : ''}`}><svg className={`w-3 h-3 ${sortField === 'status' ? 'text-[#9a6bff]' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg></div></button>
                 <button onClick={() => handleSortClick('name')} className={`flex-1 h-9 flex items-center justify-between px-3 border rounded-lg transition-all group ${sortField === 'name' ? 'bg-[#9a6bff]/5 border-[#9a6bff]/30' : 'bg-white border-slate-100 hover:border-[#9a6bff]/40 hover:bg-slate-50/50'}`}><div className="flex items-center space-x-2"><svg className={`w-3.5 h-3.5 transition-colors ${sortField === 'name' ? 'text-[#9a6bff]' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" strokeWidth="2"/></svg><span className={`text-[12px] font-normal transition-colors ${sortField === 'name' ? 'text-[#9a6bff]' : 'text-slate-700 group-hover:text-slate-900'}`}>按姓名</span></div><div className={`transition-all duration-300 ${sortField === 'name' && sortOrder === 'desc' ? 'rotate-180' : ''}`}><svg className={`w-3 h-3 ${sortField === 'name' ? 'text-[#9a6bff]' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg></div></button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
           {renderItemList(dataToRender)}
         </div>
       </div>
@@ -589,5 +727,18 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
 };
 
 const SidebarButton: React.FC<{ active: boolean; isFlashing?: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, isFlashing, onClick, icon, label }) => (
-  <div className="relative group/btn"><button onClick={(e) => { e.stopPropagation(); onClick(); }} className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all duration-300 relative z-10 ${active ? 'text-[#9a6bff] scale-110' : isFlashing ? 'animate-alert-flash text-slate-500' : 'text-slate-500 hover:text-[#9a6bff]'}`}><svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">{icon}</svg>{isFlashing && !active && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border border-white"></span>}</button><div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 opacity-0 group-hover/btn:opacity-100 transition-all duration-200 translate-x-2 group-hover/btn:translate-x-0 z-[9999] pointer-events-none"><div className="tooltip-bubble relative shadow-2xl">{label}<div className="absolute top-1/2 -translate-y-1/2 -right-[4px] w-2 h-2 bg-[#080b1a] rotate-45"></div></div></div></div>
+  <div className="relative group/btn">
+    <button 
+      onClick={(e) => { e.stopPropagation(); onClick(); }} 
+      className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all duration-300 relative z-10 ${
+        active ? 'text-[#9a6bff] scale-110' : 'text-slate-500 hover:text-[#9a6bff]'
+      }`}
+    >
+      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">{icon}</svg>
+      {isFlashing && !active && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border border-white"></span>}
+    </button>
+    <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 opacity-0 group-hover/btn:opacity-100 transition-all duration-200 translate-x-2 group-hover/btn:translate-x-0 z-[9999] pointer-events-none">
+      <div className="tooltip-bubble relative shadow-2xl">{label}<div className="absolute top-1/2 -translate-y-1/2 -right-[4px] w-2 h-2 bg-[#080b1a] rotate-45"></div></div>
+    </div>
+  </div>
 );

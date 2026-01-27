@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar.tsx';
+// Fix: Updated import casing to use Header.tsx (PascalCase) to match component naming conventions and resolve casing collision error
 import { Header } from './components/Header.tsx';
 import { MapArea } from './components/realTime/MapArea.tsx';
 import { InspectionPanel } from './components/realTime/InspectionPanel.tsx';
@@ -120,7 +121,7 @@ const TAB_METADATA: Record<string, { label: string; icon: React.ReactNode }> = {
     )
   },
   [NavigationTab.TrajectoryAnalysis]: {
-    label: '人员轨迹分析',
+    label: '人员轨迹 analysis',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
         <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
@@ -221,7 +222,7 @@ const App: React.FC = () => {
             const metadata = TAB_METADATA[tabId] || { 
               label: '新模块', 
               icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2" /></svg> 
-            };
+                };
             setOpenTabs([...openTabs, { id: tabId, ...metadata }]);
           }
           setActiveTab(tabId);
@@ -332,7 +333,7 @@ const App: React.FC = () => {
                 <SiteManagementContent />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50/40">
-                  <div className="p-10 bg-white rounded-3xl shadow-xl border border-slate-100 flex flex-col items-center max-w-sm text-center">
+                  <div className="p-10 bg-white rounded-3xl shadow-xl border border-slate-100 flex flex-col items-center max-sm text-center">
                     <div className="w-20 h-20 bg-primary/5 rounded-3xl flex items-center justify-center mb-6 text-primary/40">
                       {TAB_METADATA[activeTab]?.icon || <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2" /></svg>}
                     </div>

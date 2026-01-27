@@ -1,3 +1,4 @@
+
 import { Personnel, MapPoint } from './types.ts';
 
 export const MOCK_PERSONNEL: Personnel[] = [
@@ -161,7 +162,7 @@ export const MOCK_SITES_LIST: SiteListItem[] = [
     address: '南京市建邺区江东中路363号',
     time: '2025-05-21 14:20',
     manager: '三商',
-    image: 'https://picsum.photos/seed/s2/400/300',
+    image: '', // 第二笔数据图片置空，用于测试占位图
     status: 'online',
     lat: 39.0125,
     lng: 117.7105
