@@ -140,7 +140,7 @@ const PlaybackControl: React.FC<{
   );
 };
 
-// 辅助组件：信息展示行 - 稍微增加垂直间距 py-1 且增加文字行高 leading-[20px]
+// 辅助组件：信息展示行
 const InfoRow = ({ label, value, icon }: { label: string, value?: string, icon?: React.ReactNode }) => (
   <div className="flex items-start py-1 border-b border-slate-50/50 last:border-0 group">
     <div className="flex items-start shrink-0 w-[82px] space-x-1.5 pt-[2px]">
@@ -218,7 +218,6 @@ const PersonnelPopup: React.FC<{ person: any; position: { x: number, y: number }
       <div className="flex-1 overflow-y-hidden px-5 pb-3 custom-scrollbar">
         {activeTab === '实时' && (
           <div className="animate-in fade-in duration-300">
-            {/* 增加 pt-3 以拉开内容项与上方页签的距离 */}
             <div className="space-y-0 pt-3">
               <InfoRow label="职位" value="管网安检员" icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>} />
               <InfoRow label="版本号" value="v6.168.229" icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>} />
@@ -260,7 +259,25 @@ const PersonnelPopup: React.FC<{ person: any; position: { x: number, y: number }
             ))}
           </div>
         )}
-        {activeTab === '历史' && (<div className="py-1 animate-in fade-in duration-300">{[{ time: '2026/01/16: 08:45 -', desc: '张扬2026/01/09的计划' },{ time: '2026/01/16: 08:45 -', desc: '张扬2026/01/09的计划' },{ time: '2026/01/16: 08:59 - 10:43', desc: '张扬2026/01/09的计划' },{ time: '2026/01/15: 09:12 - 17:30', desc: '张扬2026/01/08的计划' }].map((item, i) => (<div key={i} className="py-2.5 border-b border-slate-50 last:border-0"><div className="text-[12px] text-slate-300 mb-0.5 font-normal tracking-tight">{item.time}</div><div className="text-[12px] text-slate-500 leading-relaxed font-medium">{item.desc}</div></div>))}</div>)}
+        {activeTab === '历史' && (
+          <div className="py-1 animate-in fade-in duration-300">
+            {[
+              { time: '2026/01/16: 08:45 -', desc: '张扬2026/01/09的计划' },
+              { time: '2026/01/16: 08:45 -', desc: '张扬2026/01/09的计划' },
+              { time: '2026/01/16: 08:59 - 10:43', desc: '张扬2026/01/09的计划' },
+              { time: '2026/01/15: 09:12 - 17:30', desc: '张扬2026/01/08的计划' }
+            ].map((item, i) => (
+              <div key={i} className="py-3 border-b border-slate-50 last:border-0">
+                <div className="text-[12.5px] font-bold text-slate-700 mb-0.5 tracking-tight">
+                  {item.time}
+                </div>
+                <div className="text-[11.5px] text-slate-400 leading-relaxed font-normal">
+                  {item.desc}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -422,8 +439,14 @@ const SiteDetailPopup: React.FC<{ site: SiteListItem; onClose: () => void; onPre
         )}
         {activeTab === '历史' && (
           <div className="space-y-4 animate-in fade-in duration-300">
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100"><div className="text-[12px] text-slate-400 mb-1">2025/05/22 08:30</div><div className="text-[13px] text-slate-700 font-normal">张扬完成了例行安全巡检</div></div>
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100"><div className="text-[12px] text-slate-400 mb-1">2025/05/21 14:20</div><div className="text-[13px] text-slate-700 font-normal">系统自动标记该点位为关注工地</div></div>
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <div className="text-[12.5px] font-bold text-slate-700 mb-1">2025/05/22 08:30</div>
+              <div className="text-[11.5px] text-slate-400 font-normal tracking-tight">张扬完成了例行安全巡检</div>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <div className="text-[12.5px] font-bold text-slate-700 mb-1">2025/05/21 14:20</div>
+              <div className="text-[11.5px] text-slate-400 font-normal tracking-tight">系统自动标记该点位为关注工地</div>
+            </div>
           </div>
         )}
         {activeTab === '图片' && (

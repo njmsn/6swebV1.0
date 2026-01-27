@@ -323,25 +323,18 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
     { id: 'vl2', title: '点火', time: '10:52' },
   ];
 
-  // 无人机专属日志
   const DRONE_LOGS: LogRecord[] = [
     { id: 'dl1', title: '降落', time: '11:06' },
     { id: 'dl2', title: '起飞', time: '10:52' },
   ];
 
-  const COMMON_LOGS: LogRecord[] = [
-    { id: 'cl1', title: '信号恢复', time: '11:06' },
-    { id: 'cl2', title: '进入监控区域', time: '10:52' },
-  ];
-
-  // 复选框组件 - 文字大小统一为 14px
-  const FilterCheckbox = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (val: boolean) => void }) => (
+  const FilterCheckbox: React.FC<{ label: string; checked: boolean; onChange: (val: boolean) => void }> = ({ label, checked, onChange }) => (
     <label className="flex items-center space-x-2 cursor-pointer group select-none py-0.5">
       <div 
         onClick={(e) => { e.stopPropagation(); onChange(!checked); }}
         className={`w-4 h-4 rounded flex items-center justify-center transition-all ${checked ? 'bg-[#3b82f6] text-white border-[#3b82f6]' : 'border border-slate-300 bg-white group-hover:border-[#3b82f6]'}`}
       >
-        {checked && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>}
+        {checked && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>}
       </div>
       <span className="text-[14px] font-normal text-slate-600 group-hover:text-slate-800 transition-colors" onClick={() => onChange(!checked)}>{label}</span>
     </label>
@@ -499,13 +492,22 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
             </div>
             {isExpanded && (
               <div className="mt-3 border-t border-slate-50 pt-2" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-around mb-2.5 border-b border-slate-50">
+                <div className="flex items-center w-full mb-2.5 border-b border-slate-50 px-0">
                   {tabs.map((tab) => (
-                    <button key={tab} onClick={() => setActiveDetailTab(tab)} className={`px-4 py-1.5 text-[12px] font-medium transition-all relative ${activeDetailTab === tab ? 'text-[#9a6bff]' : 'text-slate-500 hover:text-slate-700'}`}>{tab === 'trajectory' ? '轨迹' : tab === 'task' ? '任务' : tab === 'alarm' ? (isDroneRelated ? '隐患' : '报警') : '日志'}{activeDetailTab === tab && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#9a6bff] rounded-full"></div>}</button>
+                    <button 
+                      key={tab} 
+                      onClick={() => setActiveDetailTab(tab)} 
+                      className={`flex-1 py-1.5 m-0 px-0 text-[12px] font-medium transition-all relative ${
+                        activeDetailTab === tab ? 'text-[#9a6bff]' : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      {tab === 'trajectory' ? '轨迹' : tab === 'task' ? '任务' : tab === 'alarm' ? (isDroneRelated ? '隐患' : '报警') : '日志'}
+                      {activeDetailTab === tab && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#9a6bff] rounded-full"></div>}
+                    </button>
                   ))}
                 </div>
                 {activeDetailTab === 'trajectory' && (
-                  <div className="space-y-4 px-2">
+                  <div className="space-y-4 pt-1 px-0">
                     <div className="bg-[#9a6bff]/5 rounded-xl py-2 px-4 flex items-center justify-between border border-[#9a6bff]/10">
                       <div className="space-y-0.5">
                         <span className="text-[11px] text-[#9a6bff]/60 font-medium uppercase tracking-wider">总公里数</span>
@@ -520,8 +522,8 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                         <div className="text-[12px] font-bold text-slate-700">08:30 - 12:00</div>
                       </div>
                     </div>
-                    <div className="pt-0.5">
-                      <div className="flex items-center justify-between mb-3 px-1">
+                    <div className="pt-0.5 px-0">
+                      <div className="flex items-center justify-between mb-3 px-0">
                         <div className="flex items-center space-x-2 group/all" onClick={() => handleToggleAllTrajectories(item.id)}>
                           <div className={`w-5 h-5 rounded-md border transition-all duration-200 flex items-center justify-center cursor-pointer ${isAllTrajectoriesSelected ? 'bg-[#7c4dff] border-[#7c4dff] text-white shadow-sm shadow-[#7c4dff]/20' : 'bg-white border-slate-300 group-hover/all:border-slate-400'}`}>
                             {isAllTrajectoriesSelected && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" strokeWidth="3"/></svg>}
@@ -532,33 +534,32 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                           <div className="relative"><button onClick={() => { const next = selectedTrajectoryAction === 'track' ? null : 'track'; setSelectedTrajectoryAction(next); onPlaybackToggle?.(next === 'track', item.id); }} className={`peer w-8 h-8 rounded-lg flex items-center justify-center transition-all border active:scale-90 z-20 relative ${selectedTrajectoryAction === 'track' ? 'bg-[#9a6bff] text-white shadow-lg shadow-[#9a6bff]/30' : 'bg-white text-slate-500 hover:bg-slate-50'}`}><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2"/><path d="M10 8l6 4-6 4z" fill="currentColor"/></svg></button><div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 opacity-0 peer-hover:opacity-100 transition-all duration-200 translate-y-2 peer-hover:translate-y-0 z-50 pointer-events-none"><div className="tooltip-bubble tooltip-arrow-bottom text-nowrap">轨迹回放</div></div></div>
                         </div>
                       </div>
-                      <div className="space-y-4 px-1">{trajectoryData.map((traj, idx) => { const isSelected = selectedTrajectoryKeys.has(`${item.id}-${idx}`); return (<div key={idx} onClick={() => toggleTrajectory(item.id, idx)} className="flex items-center justify-between group/line cursor-pointer select-none"><div className="flex items-center space-x-3.5"><div className={`w-5 h-5 rounded-md border transition-all duration-200 flex items-center justify-center ${isSelected ? 'bg-[#7c4dff] border-[#7c4dff] text-white shadow-sm' : 'bg-white border-slate-300'}`}>{isSelected && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" strokeWidth="3"/></svg>}</div><div className="flex items-center"><div className={`w-3.5 h-3.5 mr-2.5 rounded-sm shrink-0 shadow-sm ${segmentColors[idx % segmentColors.length]}`}></div><span className={`text-[12px] font-normal ${isSelected ? 'text-slate-800' : 'text-slate-700'}`}>{traj.time}</span></div></div><div className="flex items-center space-x-3"><span className={`px-2 py-0.5 rounded text-[12px] font-normal ${isSelected ? 'bg-[#7c4dff]/10 text-[#7c4dff]' : 'bg-slate-50 text-slate-400'}`}>{traj.dist}</span><span className="text-[12px] text-slate-500 font-normal w-12 text-right">{traj.dur}</span></div></div>); })}</div>
+                      <div className="space-y-4 px-0">{trajectoryData.map((traj, idx) => { const isSelected = selectedTrajectoryKeys.has(`${item.id}-${idx}`); return (<div key={idx} onClick={() => toggleTrajectory(item.id, idx)} className="flex items-center justify-between group/line cursor-pointer select-none"><div className="flex items-center space-x-3.5"><div className={`w-5 h-5 rounded-md border transition-all duration-200 flex items-center justify-center ${isSelected ? 'bg-[#7c4dff] border-[#7c4dff] text-white shadow-sm' : 'bg-white border-slate-300'}`}>{isSelected && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" strokeWidth="3"/></svg>}</div><div className="flex items-center"><div className={`w-3.5 h-3.5 mr-2.5 rounded-sm shrink-0 shadow-sm ${segmentColors[idx % segmentColors.length]}`}></div><span className={`text-[12px] font-normal ${isSelected ? 'text-slate-800' : 'text-slate-700'}`}>{traj.time}</span></div></div><div className="flex items-center space-x-3"><span className={`px-2 py-0.5 rounded text-[12px] font-normal ${isSelected ? 'bg-[#7c4dff]/10 text-[#7c4dff]' : 'bg-slate-50 text-slate-400'}`}>{traj.dist}</span><span className="text-[12px] text-slate-500 font-normal w-12 text-right">{traj.dur}</span></div></div>); })}</div>
                     </div>
                   </div>
                 )}
                 {activeDetailTab === 'task' && !isDroneRelated && (
-                  <div className="space-y-1.5 pt-0 pb-1.5 px-2">
-                    <div onClick={() => setIsTaskPlanExpanded(!isTaskPlanExpanded)} className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 py-1 px-2 -mx-2 rounded-lg transition-colors"><span className="text-[12px] font-normal text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">{isPersonnelRelated ? '用户安检' : '抢修作业'}-{item.name}{selectedDate ? selectedDate.replace(/-/g, '/') : '未选日期'}的计划</span><svg className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isTaskPlanExpanded ? 'rotate-0' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7" strokeWidth="2"/></svg></div>
+                  <div className="space-y-1.5 pt-0 pb-1.5 px-0">
+                    <div onClick={() => setIsTaskPlanExpanded(!isTaskPlanExpanded)} className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 py-1 px-0 rounded-lg transition-colors"><span className="text-[12px] font-normal text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">{isPersonnelRelated ? '用户安检' : '抢修作业'}-{item.name}{selectedDate ? selectedDate.replace(/-/g, '/') : '未选日期'}的计划</span><svg className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${isTaskPlanExpanded ? 'rotate-0' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7" strokeWidth="2"/></svg></div>
                     {isTaskPlanExpanded && (
-                      <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="pl-4 pr-1 flex items-center justify-between"><div className="flex items-center space-x-12"><div className="flex items-center space-x-2"><span className="text-[12px] text-slate-500 font-normal">总计</span><span className="text-[12px] font-normal text-slate-800 leading-none">48</span></div><div className="flex items-center space-x-2"><span className="text-[12px] text-[#10b981] font-normal">已完成</span><span className="text-[12px] font-normal text-[#10b981] leading-none">32</span></div></div><button onClick={() => onViewAllTasks?.({ name: item.name, tasks: mockTasks })} className="px-4 py-1 bg-[#9a6bff]/5 text-[#9a6bff] rounded-full text-[12px] font-normal hover:bg-[#9a6bff]/10 transition-colors shadow-sm shrink-0">查看全部</button></div>
-                        <div className="space-y-0 border-t border-slate-50 pt-0.5 pl-4">{mockTasks.slice(0, 4).map((task) => (<div key={task.id} className="flex items-center justify-between py-1.5 group/task-item border-b border-slate-50/50 last:border-0 pr-1 cursor-pointer hover:bg-slate-50 rounded-md transition-colors" onClick={() => onTaskClick?.(task)}><div className="flex items-center space-x-3 overflow-hidden flex-1"><div className={`w-2 h-2 rounded-full shrink-0 ${task.status === 'completed' ? 'bg-[#10b981]' : 'bg-slate-300'}`}></div><span title={task.address} className="text-[12px] font-normal text-slate-700 truncate group-hover/task-item:text-[#9a6bff] transition-colors">{task.address}</span></div><div className="shrink-0 ml-4"><span className="text-[12px] font-normal text-slate-400 font-mono">{task.time}</span></div></div>))}</div>
+                      <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300 px-0">
+                        <div className="flex items-center justify-between"><div className="flex items-center space-x-12"><div className="flex items-center space-x-2"><span className="text-[12px] text-slate-500 font-normal">总计</span><span className="text-[12px] font-normal text-slate-800 leading-none">48</span></div><div className="flex items-center space-x-2"><span className="text-[12px] text-[#10b981] font-normal">已完成</span><span className="text-[12px] font-normal text-[#10b981] leading-none">32</span></div></div><button onClick={() => onViewAllTasks?.({ name: item.name, tasks: mockTasks })} className="px-4 py-1 bg-[#9a6bff]/5 text-[#9a6bff] rounded-full text-[12px] font-normal hover:bg-[#9a6bff]/10 transition-colors shadow-sm shrink-0">查看全部</button></div>
+                        <div className="space-y-0 border-t border-slate-50 pt-0.5 px-0">{mockTasks.slice(0, 4).map((task) => (<div key={task.id} className="flex items-center justify-between py-1.5 group/task-item border-b border-slate-50/50 last:border-0 pr-0 cursor-pointer hover:bg-slate-50 rounded-md transition-colors" onClick={() => onTaskClick?.(task)}><div className="flex items-center space-x-3 overflow-hidden flex-1"><div className={`w-2 h-2 rounded-full shrink-0 ${task.status === 'completed' ? 'bg-[#10b981]' : 'bg-slate-300'}`}></div><span title={task.address} className="text-[12px] font-normal text-slate-700 truncate group-hover/task-item:text-[#9a6bff] transition-colors">{task.address}</span></div><div className="shrink-0 ml-4"><span className="text-[12px] font-normal text-slate-400 font-mono">{task.time}</span></div></div>))}</div>
                       </div>
                     )}
                   </div>
                 )}
                 {activeDetailTab === 'log' && (
-                  <div className="pt-4 px-5 relative">
-                    <div className="absolute left-[23px] top-6 bottom-4 w-0.5 bg-slate-100 rounded-full"></div>
+                  <div className="pt-4 px-0 relative">
+                    <div className="absolute left-[3px] top-6 bottom-4 w-0.5 bg-slate-100 rounded-full"></div>
                     <div className="space-y-5">
                       {(isDroneRelated ? DRONE_LOGS : isPersonnelRelated ? PERSONNEL_LOGS : VEHICLE_LOGS).map((log, idx) => {
-                        // 语义颜色逻辑：点火/起飞为绿色；熄火/降落为灰色；其余首项为紫色
                         const isIgnitionOn = log.title === '点火' || log.title === '起飞';
                         const isIgnitionOff = log.title === '熄火' || log.title === '降落';
                         
                         return (
-                          <div key={log.id} className="flex items-center relative pl-8 group/log">
-                            <div className={`absolute left-0 w-3 h-3 rounded-full border-2 bg-white transition-all z-10 ${
+                          <div key={log.id} className="flex items-center relative pl-6 group/log">
+                            <div className={`absolute left-[-2px] w-3 h-3 rounded-full border-2 bg-white transition-all z-10 ${
                               isIgnitionOn 
                                 ? 'border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] scale-110' 
                                 : isIgnitionOff 
@@ -579,7 +580,7 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                               }`}>
                                 {log.title}
                               </span>
-                              <span className="text-[12px] text-slate-400 font-mono">{log.time}</span>
+                              <span className="text-[12px] text-slate-400 font-mono text-right">{log.time}</span>
                             </div>
                           </div>
                         );
@@ -601,11 +602,10 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
     <div className="flex h-full bg-white overflow-visible flex-row">
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-500 ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10 pointer-events-none w-0'}`}>
         <div className="pt-2 pb-1 px-4 border-b border-slate-50 relative z-50">
-          {/* 日期切换容器：应用 -mx-2 以对齐下方展开项的边框 */}
-          <div className="flex items-center justify-between bg-white rounded-xl px-3 py-2 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] relative -mx-2">
-            <button onClick={handlePrevDay} className="text-slate-500 hover:text-[#7c4dff] hover:bg-slate-50 p-1 rounded-md transition-all active:scale-90"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg></button>
-            <div onClick={() => setIsCalendarOpen(!isCalendarOpen)} className="flex items-center space-x-2.5 cursor-pointer group px-2 py-1"><svg className="w-4 h-4 text-[#7c4dff] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" /></svg><span className="text-[13px] font-normal text-slate-700">{formatDisplayDate(selectedDate)}</span><svg className={`w-3 h-3 text-slate-500 group-hover:text-[#7c4dff] transition-all ${isCalendarOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></div>
-            <button onClick={handleNextDay} className="text-slate-500 hover:text-[#7c4dff] hover:bg-slate-50 p-1 rounded-md transition-all active:scale-90"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" /></svg></button>
+          <div className="flex items-center justify-between bg-white rounded-xl px-2 py-2 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] relative -mx-2 border border-slate-50">
+            <button onClick={handlePrevDay} className="text-slate-500 hover:text-[#7c4dff] p-1 rounded-md transition-all active:scale-90"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg></button>
+            <div onClick={() => setIsCalendarOpen(!isCalendarOpen)} className="flex items-center space-x-2.5 cursor-pointer group px-2 py-1"><svg className="w-4 h-4 text-[#7c4dff] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" /></svg><span className="text-[13px] font-normal text-slate-700">{formatDisplayDate(selectedDate)}</span><svg className={`w-3 h-3 text-slate-500 group-hover:text-[#7c4dff] transition-all ${isCalendarOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg></div>
+            <button onClick={handleNextDay} className="text-slate-500 hover:text-[#7c4dff] p-1 rounded-md transition-all active:scale-90"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg></button>
             {isCalendarOpen && (
               <div ref={calendarRef} className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-slate-300 z-[100] p-4 animate-in fade-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-4 px-1"><div className="flex items-center space-x-2">{pickerMode === 'day' ? (<div className="flex items-center space-x-1.5 group cursor-pointer" onClick={() => setPickerMode('year')}><span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors">{viewDate.getFullYear()}年</span><span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors" onClick={handleMonthPickerClick}>{String(viewDate.getMonth() + 1).padStart(2, '0')}月</span><svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg></div>) : (<div className="flex items-center space-x-1.5 group cursor-pointer" onClick={() => setPickerMode('year')}><span className="text-[14px] font-bold text-slate-800 hover:text-[#3b82f6] transition-colors">{viewDate.getFullYear()}年</span><svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" strokeWidth="2.5" /></svg></div>)}</div><div className="flex items-center space-x-3"><button onClick={() => changeView(-1)} className="p-1 text-slate-500 hover:text-slate-700 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" /></svg></button><button onClick={() => changeView(1)} className="p-1 text-slate-500 hover:text-slate-700 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeWidth="2" /></svg></button></div></div>
@@ -634,7 +634,6 @@ export const InspectionPanel: React.FC<InspectionPanelProps> = ({ isOpen, onTogg
                   </svg>
                 </button>
 
-                {/* 筛选弹窗 */}
                 {isFilterOpen && (
                   <div 
                     className="absolute top-full right-0 mt-2.5 w-[310px] bg-white border border-slate-300 rounded-xl shadow-[0_20px_50px_-15px_rgba(0,0,0,0.18)] p-4 space-y-4 z-[200] animate-in zoom-in-95 fade-in duration-200 transform origin-top-right"
